@@ -53,7 +53,7 @@ app.use(
 );
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+const allowedOrigins = (process.env.CLIENT_URL || 'http://elite-code-hub.netlify.app')
     .split(',')
     .map((o) => o.trim());
 
