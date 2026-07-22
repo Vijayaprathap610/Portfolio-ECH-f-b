@@ -4,9 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-//const mongoSanitize = require('express-mongo-sanitize');
 const mongoSanitize = require('./middleware/mongoSanitize');
-//const xssClean = require('xss-clean');
 const hpp = require('hpp');
 const path = require('path');
 const connectDB = require('./config/db');
@@ -79,15 +77,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ─── Security Middleware ─────────────────────────────────────────────────────
-//app.use(mongoSanitize());   // Prevent MongoDB injection via $
 app.use(mongoSanitize);
-//app.use(xssClean());        // Sanitize user input against XSS
 app.use(hpp());             // HTTP Parameter Pollution protection
-/*app.use(
-    mongoSanitize({
-        replaceWith: "_",
-    })
-);*/
 
 // ─── Compression ─────────────────────────────────────────────────────────────
 app.use(compression());
@@ -101,6 +92,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ─── Global API Rate Limiter ─────────────────────────────────────────────────
 app.use('/api', apiLimiter);
 
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'EliteCodeHub Backend API is running.',
+        health: '/api/health'
+    });
+});
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
     res.status(200).json({
