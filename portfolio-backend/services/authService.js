@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const logger = require('../utils/logger');
 
-//Generate JWT token for admin
+// Generate JWT token for admin/user
 const generateToken = (adminId, role) => {
     return jwt.sign(
         { id: adminId, role },
@@ -11,7 +11,7 @@ const generateToken = (adminId, role) => {
     );
 };
 
-//Admin login — validate name + secret key
+// Admin login — validate name + secret key
 const adminLogin = async (name, secretKey, ip = '') => {
     // Find admin by name, including secretKeyHash for comparison
     const admin = await Admin.findOne({ name: name.toLowerCase() }).select('+secretKeyHash');
@@ -49,14 +49,17 @@ const adminLogin = async (name, secretKey, ip = '') => {
 
     const token = generateToken(admin._id, admin.role);
 
+    const adminInfo = {
+        id: admin._id,
+        name: admin.name,
+        role: admin.role,
+        lastLogin: new Date(),
+    };
+
     return {
         token,
-        admin: {
-            id: admin._id,
-            name: admin.name,
-            role: admin.role,
-            lastLogin: new Date(),
-        },
+        admin: adminInfo,
+        user: adminInfo,
         expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     };
 };
@@ -65,7 +68,7 @@ const adminLogin = async (name, secretKey, ip = '') => {
 const verifyToken = (token) => {
     try {
         return jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
+    } catch {
         throw { statusCode: 401, message: 'Invalid or expired token.' };
     }
 };

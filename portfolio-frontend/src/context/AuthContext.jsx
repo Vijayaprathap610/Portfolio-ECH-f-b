@@ -14,57 +14,87 @@ import {
 
 const AuthContext = createContext();
 
+const getStoredUser = () => {
+  try {
+    const raw =
+      localStorage.getItem("elitecodehub_admin") ||
+      localStorage.getItem("elitecodehub_user");
+    if (!raw || raw === "undefined" || raw === "null") return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const getStoredToken = () => {
+  const t = localStorage.getItem("elitecodehub_token");
+  if (!t || t === "undefined" || t === "null") return null;
+  return t;
+};
+
 export const AuthProvider = ({ children }) => {
-  const [admin, setAdmin] = useState(() => {
-    const stored = localStorage.getItem("elitecodehub_admin");
-    return stored ? JSON.parse(stored) : null;
-  });
-  const [token, setToken] = useState(
-    () => localStorage.getItem("elitecodehub_token") || null,
-  );
+  const [admin, setAdmin] = useState(getStoredUser);
+  const [token, setToken] = useState(getStoredToken);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  // Verify token on mount
+  // Verify token and user data on mount
   useEffect(() => {
+    let isMounted = true;
     const verify = async () => {
       if (!token) {
-        setLoading(false);
+        if (isMounted) setLoading(false);
         return;
       }
       try {
         const res = await getAdminMe();
-        setAdmin(res.data.data);
-        localStorage.setItem(
-          "elitecodehub_admin",
-          JSON.stringify(res.data.data),
-        );
+        const payload = res.data?.data;
+        const resolved = payload?.user || payload?.admin || payload;
+        if (isMounted && resolved) {
+          setAdmin(resolved);
+          localStorage.setItem("elitecodehub_admin", JSON.stringify(resolved));
+          localStorage.setItem("elitecodehub_user", JSON.stringify(resolved));
+        }
       } catch {
-        // Token invalid — clear everything
+        // Token invalid or expired — clear storage safely
         localStorage.removeItem("elitecodehub_token");
         localStorage.removeItem("elitecodehub_admin");
-        setAdmin(null);
-        setToken(null);
+        localStorage.removeItem("elitecodehub_user");
+        if (isMounted) {
+          setAdmin(null);
+          setToken(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     verify();
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   const login = useCallback(async (name, secretKey) => {
     setAuthError(null);
     try {
       const res = await loginAPI({ name, secretKey });
-      const { token: newToken, admin: adminData } = res.data.data;
-      localStorage.setItem("elitecodehub_token", newToken);
-      localStorage.setItem("elitecodehub_admin", JSON.stringify(adminData));
-      setToken(newToken);
-      setAdmin(adminData);
-      return { success: true };
+      const payload = res.data?.data;
+      const newToken = payload?.token;
+      const adminData = payload?.admin || payload?.user || payload;
+
+      if (newToken) {
+        localStorage.setItem("elitecodehub_token", newToken);
+        setToken(newToken);
+      }
+      if (adminData) {
+        localStorage.setItem("elitecodehub_admin", JSON.stringify(adminData));
+        localStorage.setItem("elitecodehub_user", JSON.stringify(adminData));
+        setAdmin(adminData);
+      }
+      return { success: true, user: adminData, admin: adminData };
     } catch (err) {
       const message =
-        err.response?.data?.message || "Login failed. Please try again.";
+        err.response?.data?.message || "Login failed. Please check credentials.";
       setAuthError(message);
       return { success: false, message };
     }
@@ -74,20 +104,22 @@ export const AuthProvider = ({ children }) => {
     try {
       await logoutAPI();
     } catch {
-      // Proceed with local logout even if API fails
+      // Proceed with local logout regardless of API response
     } finally {
       localStorage.removeItem("elitecodehub_token");
       localStorage.removeItem("elitecodehub_admin");
+      localStorage.removeItem("elitecodehub_user");
       setAdmin(null);
       setToken(null);
     }
   }, []);
 
-  const isAuthenticated = !!admin && !!token;
+  const isAuthenticated = Boolean(admin && token);
 
   return (
     <AuthContext.Provider
       value={{
+        user: admin,
         admin,
         token,
         loading,

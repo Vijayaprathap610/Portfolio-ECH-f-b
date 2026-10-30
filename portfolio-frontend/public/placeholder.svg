@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#12101a"/>
+      <stop offset="50%" stop-color="#1a1726"/>
+      <stop offset="100%" stop-color="#241e34"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c73e58"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bgGrad)"/>
+  <circle cx="400" cy="200" r="56" fill="rgba(99, 102, 241, 0.12)" stroke="url(#accentGrad)" stroke-width="2"/>
+  <path d="M380 185 L420 185 M380 200 L412 200 M380 215 L404 215" stroke="#9e95ab" stroke-width="3" stroke-linecap="round"/>
+  <rect x="368" y="170" width="64" height="60" rx="6" fill="none" stroke="#c73e58" stroke-width="2.5"/>
+  <text x="400" y="295" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="18" font-weight="700" fill="#f0edf5" text-anchor="middle" letter-spacing="1">PROJECT PREVIEW</text>
+  <text x="400" y="322" font-family="'JetBrains Mono', monospace" font-size="12" fill="#6b6178" text-anchor="middle">Elite Code Hub Architecture</text>
+</svg>
+

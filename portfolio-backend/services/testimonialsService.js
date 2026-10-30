@@ -1,11 +1,11 @@
 const Testimonial = require('../models/Testimonial');
 
-
 // Public: only approved testimonials
 const getApprovedTestimonials = async () => {
     return Testimonial.find({ status: 'approved', isVisible: true })
         .sort({ isFeatured: -1, order: 1, createdAt: -1 })
-        .select('-submitterEmail -submitterIp');
+        .select('-submitterEmail -submitterIp')
+        .lean();
 };
 
 // Admin: all testimonials with filters
@@ -15,7 +15,7 @@ const getAllTestimonials = async ({ status, page = 1, limit = 10 }) => {
 
     const skip = (Number(page) - 1) * Number(limit);
     const [testimonials, total] = await Promise.all([
-        Testimonial.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+        Testimonial.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
         Testimonial.countDocuments(query),
     ]);
 
@@ -23,7 +23,7 @@ const getAllTestimonials = async ({ status, page = 1, limit = 10 }) => {
 };
 
 const getTestimonialById = async (id) => {
-    const t = await Testimonial.findById(id);
+    const t = await Testimonial.findById(id).lean();
     if (!t) throw { statusCode: 404, message: 'Testimonial not found.' };
     return t;
 };

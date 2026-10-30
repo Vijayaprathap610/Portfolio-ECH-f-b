@@ -1,16 +1,23 @@
 const rateLimit = require('express-rate-limit');
 const { buildError } = require('../utils/response');
 
-// General API rate limiter
+// General API rate limiter (generous limit for development & normal browsing)
+const isDev = process.env.NODE_ENV !== 'production';
+
 const apiLimiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
-    message: buildError(429, 'Too many requests. Please try again after 15 minutes.'),
+    max: isDev ? 5000 : (parseInt(process.env.RATE_LIMIT_MAX) || 1000), // High threshold so dev reloads / fast browsing never get 429
+    message: buildError(429, 'Too many requests. Please try again after a few minutes.'),
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+        // Skip rate limiting for local development requests
+        const ip = req.ip || req.connection.remoteAddress || '';
+        return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+    },
     handler: (req, res) => {
         res.status(429).json(
-            buildError(429, 'Too many requests. Please try again after 15 minutes.')
+            buildError(429, 'Too many requests. Please try again after a few minutes.')
         );
     },
 });
@@ -18,7 +25,7 @@ const apiLimiter = rateLimit({
 // Strict limiter for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Only 10 attempts per 15 min
+    max: 20, // 20 attempts per 15 min
     message: buildError(429, 'Too many login attempts. Please try again after 15 minutes.'),
     skipSuccessfulRequests: true,
     handler: (req, res) => {
@@ -31,7 +38,7 @@ const authLimiter = rateLimit({
 // Limiter for contact form submissions
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // Only 5 contact submissions per hour per IP
+    max: 15,
     message: buildError(429, 'Too many contact submissions. Please try again after 1 hour.'),
     handler: (req, res) => {
         res.status(429).json(
@@ -43,7 +50,7 @@ const contactLimiter = rateLimit({
 // Limiter for testimonial submissions
 const testimonialLimiter = rateLimit({
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
-    max: 3, // 3 testimonials per day per IP
+    max: 10,
     handler: (req, res) => {
         res.status(429).json(
             buildError(429, 'You have submitted too many testimonials today. Try again tomorrow.')
@@ -51,4 +58,9 @@ const testimonialLimiter = rateLimit({
     },
 });
 
-module.exports = { apiLimiter, authLimiter, contactLimiter, testimonialLimiter };
+module.exports = {
+    apiLimiter,
+    authLimiter,
+    contactLimiter,
+    testimonialLimiter,
+};

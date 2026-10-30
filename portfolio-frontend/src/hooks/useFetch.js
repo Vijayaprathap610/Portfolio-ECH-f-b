@@ -1,23 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Global in-memory hook cache to eliminate re-fetch delay when navigating
+const hookCache = new Map();
+
 /**
- * Universal data-fetching hook.
- *
- * Usage variants:
- *   useFetch(apiFunc)                       – call apiFunc() on mount, never refetch
- *   useFetch(apiFunc, params)               – call apiFunc(params) on mount
- *   useFetch(() => apiFunc(x), null, [x])   – closure pattern, re-fetches when x changes
- *
- * The internal ref trick ensures the LATEST apiFunc closure is always used,
- * even when it isn't listed in deps, preventing stale-closure bugs.
+ * High-performance data-fetching hook with instant in-memory cache and background revalidation.
  */
-const useFetch = (apiFunc, params = null, deps = []) => {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
+const useFetch = (apiFunc, params = null) => {
+    // Generate a cache key
+    const fnKey = apiFunc?.name || apiFunc?.toString() || "fetcher";
+    const cacheKey = `${fnKey}_${JSON.stringify(params || {})}`;
+
+    const [data, setData] = useState(() => {
+        if (hookCache.has(cacheKey)) {
+            return hookCache.get(cacheKey);
+        }
+        return null;
+    });
+    const [loading, setLoading] = useState(() => !hookCache.has(cacheKey));
     const [error, setError] = useState(null);
 
-    // Always keep a reference to the most recent apiFunc so the callback
-    // never closes over a stale version.
     const apiFuncRef = useRef(apiFunc);
     useEffect(() => {
         apiFuncRef.current = apiFunc;
@@ -28,29 +30,39 @@ const useFetch = (apiFunc, params = null, deps = []) => {
         paramsRef.current = params;
     });
 
-    // fetchData is only recreated when the caller's declared deps change.
-    const fetchData = useCallback(async () => {
-        setLoading(true);
+    const fetchData = useCallback(async (bypassCache = false) => {
+        // If we don't have cached data, trigger loading state
+        if (!hookCache.has(cacheKey) || bypassCache) {
+            setLoading(true);
+        }
         setError(null);
         try {
             const fn = apiFuncRef.current;
             const p = paramsRef.current;
-            const res = p !== null ? await fn(p) : await fn();
-            setData(res.data);
+            const res = p !== null && p !== undefined ? await fn(p) : await fn();
+            const resData = res?.data;
+            setData(resData);
+            hookCache.set(cacheKey, resData);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to fetch data. Please try again.');
+            // If we have cached data, keep it and don't wipe out the screen
+            if (!hookCache.has(cacheKey)) {
+                setError(err.response?.data?.message || 'Failed to fetch data. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
-        // deps is passed through deliberately — caller controls when fetchData is recreated.
-        // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
-    }, deps);
+    }, [cacheKey]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    return { data, loading, error, refetch: fetchData };
+    return {
+        data,
+        loading,
+        error,
+        refetch: () => fetchData(true),
+    };
 };
 
 export default useFetch;

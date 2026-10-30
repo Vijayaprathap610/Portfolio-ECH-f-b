@@ -15,7 +15,7 @@ import {
 const STATUS_COLORS = {
   unread: "#6c63ff",
   read: "#3b82f6",
-  replied: "#10b981",
+  replied: "#2c6b8a",
   archived: "#6b7280",
 };
 

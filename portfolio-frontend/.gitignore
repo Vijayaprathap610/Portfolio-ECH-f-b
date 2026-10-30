@@ -23,3 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.agents
+.amp
+.claude
+.codex
+.copilot
+.cursor
+.gemini
+.opencode
+.env.development
+.mcp.json
+opencode.jsonc
+skills-lock.json

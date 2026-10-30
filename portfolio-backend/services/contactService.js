@@ -11,7 +11,7 @@ const getAllMessages = async ({ page = 1, limit = 10, status }) => {
 
     const skip = (Number(page) - 1) * Number(limit);
     const [messages, total] = await Promise.all([
-        Contact.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+        Contact.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
         Contact.countDocuments(query),
     ]);
 

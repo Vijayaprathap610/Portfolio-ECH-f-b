@@ -1,12 +1,25 @@
-const UPLOADS_URL = import.meta.env.VITE_UPLOADS_URL || 'http://localhost:8080';
+const UPLOADS_URL = import.meta.env?.VITE_UPLOADS_URL || "";
 
 /**
  * Build full URL for uploaded files
  */
 export const getImageUrl = (path) => {
-    if (!path) return '/placeholder.svg';
-    if (path.startsWith('http')) return path;
-    return `${UPLOADS_URL}${path}`;
+    if (!path) return "/placeholder.svg";
+    if (
+        path.startsWith("http://") ||
+        path.startsWith("https://") ||
+        path.startsWith("data:") ||
+        path.startsWith("blob:")
+    ) {
+        return path;
+    }
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+    // If UPLOADS_URL is not set (e.g. dev mode), return relative path to let Vite dev proxy handle it
+    if (!UPLOADS_URL) {
+        return normalizedPath;
+    }
+    return `${UPLOADS_URL}${normalizedPath}`;
 };
 
 /**

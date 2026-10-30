@@ -26,93 +26,99 @@ const TestimonialCard = ({ testimonial }) => (
   <div
     className="card-custom"
     style={{
-      padding: "2rem",
+      padding: "1.35rem 1.45rem",
       height: "100%",
       display: "flex",
       flexDirection: "column",
       position: "relative",
       overflow: "hidden",
+      background: "var(--bg-card)",
+      border: "1px solid var(--border)",
+      borderRadius: "var(--radius-lg)",
     }}
   >
-    {/* Quote Icon */}
+    {/* Subtle Watermark Quote */}
     <FaQuoteLeft
-      size={36}
+      size={26}
       style={{
         color: "var(--accent)",
-        opacity: 0.15,
+        opacity: 0.08,
         position: "absolute",
         top: "1rem",
         right: "1rem",
       }}
     />
 
-    {/* Stars */}
-    <div style={{ marginBottom: "1rem" }}>
-      <StarRating rating={testimonial.rating} />
+    {/* Star Rating */}
+    <div style={{ marginBottom: "0.85rem" }}>
+      <StarRating rating={testimonial.rating} size={13} />
     </div>
 
-    {/* Message */}
+    {/* Message Content */}
     <p
       style={{
         color: "var(--text-secondary)",
-        lineHeight: 1.8,
-        fontSize: "0.95rem",
+        lineHeight: 1.65,
+        fontSize: "0.885rem",
         fontStyle: "italic",
         flex: 1,
-        marginBottom: "1.5rem",
+        marginBottom: "1.2rem",
       }}
     >
       "{testimonial.message}"
     </p>
 
-    {/* Author */}
+    {/* Author Information */}
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "0.875rem",
+        gap: "0.75rem",
         marginTop: "auto",
+        paddingTop: "0.85rem",
+        borderTop: "1px solid var(--divider)",
       }}
     >
       <div
         style={{
-          width: 46,
-          height: 46,
+          width: 36,
+          height: 36,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, var(--accent), #a78bfa)",
+          background: "var(--accent-gradient)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
           fontWeight: 800,
           color: "white",
-          fontSize: "0.9rem",
+          fontSize: "0.785rem",
+          boxShadow: "0 2px 8px rgba(var(--accent-rgb), 0.25)",
         }}
       >
         {getInitials(testimonial.name)}
       </div>
       <div>
-        <p
+        <h5
           style={{
             color: "var(--text-primary)",
             fontWeight: 700,
-            margin: 0,
-            fontSize: "0.95rem",
+            margin: "0 0 0.15rem",
+            fontSize: "0.9rem",
           }}
         >
           {testimonial.name}
-        </p>
+        </h5>
         {(testimonial.position || testimonial.company) && (
           <p
             style={{
               color: "var(--text-muted)",
               margin: 0,
-              fontSize: "0.8rem",
+              fontSize: "0.76rem",
             }}
           >
             {[testimonial.position, testimonial.company]
               .filter(Boolean)
-              .join(" @ ")}
+              .join(" · ")}
           </p>
         )}
       </div>
@@ -128,11 +134,11 @@ const SubmitForm = ({ onSuccess }) => {
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim()) e.name = "Name is required.";
-    if (!form.message.trim()) e.message = "Message is required.";
-    if (form.message.trim().length < 20)
-      e.message = "Message must be at least 20 characters.";
-    if (!form.rating) e.rating = "Rating is required.";
+    if (!form.name.trim()) e.name = "Your name is required.";
+    if (!form.message.trim()) e.message = "Feedback message is required.";
+    else if (form.message.trim().length < 20)
+      e.message = "Message must be at least 20 characters long.";
+    if (!form.rating) e.rating = "Rating selection is required.";
     return e;
   };
 
@@ -152,9 +158,7 @@ const SubmitForm = ({ onSuccess }) => {
     setLoading(true);
     try {
       await submitTestimonial(form);
-      toast.success(
-        "Thank you! Your testimonial has been submitted for review.",
-      );
+      toast.success("Thank you! Your testimonial was submitted for review.");
       setForm(FORM_INITIAL);
       onSuccess?.();
     } catch (err) {
@@ -164,21 +168,8 @@ const SubmitForm = ({ onSuccess }) => {
     }
   };
 
-  const inputStyle = (field) => ({
-    width: "100%",
-    padding: "0.75rem 1rem",
-    background: "var(--bg-input)",
-    border: `1.5px solid ${errors[field] ? "var(--danger)" : "var(--border)"}`,
-    borderRadius: "var(--radius-md)",
-    color: "var(--text-primary)",
-    fontFamily: "var(--font-primary)",
-    fontSize: "0.9rem",
-    outline: "none",
-    transition: "border-color 0.2s ease",
-  });
-
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit} noValidate style={{ marginTop: "1.5rem" }}>
       <div className="row g-3">
         <div className="col-12 col-sm-6">
           <label className="form-label-custom" htmlFor="t-name">
@@ -189,65 +180,39 @@ const SubmitForm = ({ onSuccess }) => {
             name="name"
             value={form.name}
             onChange={handleChange}
-            placeholder="Vijay K"
-            style={inputStyle("name")}
-            onFocus={(e) => {
-              e.target.style.borderColor = "var(--accent)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = errors.name
-                ? "var(--danger)"
-                : "var(--border)";
-            }}
+            placeholder="John Doe"
+            className="form-control-custom"
           />
           {errors.name && (
-            <p
-              style={{
-                color: "var(--danger)",
-                fontSize: "0.78rem",
-                marginTop: "0.25rem",
-              }}
-            >
+            <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
               {errors.name}
             </p>
           )}
         </div>
         <div className="col-12 col-sm-6">
           <label className="form-label-custom" htmlFor="t-company">
-            Company
+            Company / Organization
           </label>
           <input
             id="t-company"
             name="company"
             value={form.company}
             onChange={handleChange}
-            placeholder="Acme Inc."
-            style={inputStyle("company")}
-            onFocus={(e) => {
-              e.target.style.borderColor = "var(--accent)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "var(--border)";
-            }}
+            placeholder="Google, Microsoft, etc."
+            className="form-control-custom"
           />
         </div>
         <div className="col-12 col-sm-6">
           <label className="form-label-custom" htmlFor="t-position">
-            Your Position
+            Role or Designation
           </label>
           <input
             id="t-position"
             name="position"
             value={form.position}
             onChange={handleChange}
-            placeholder="Software Engineer"
-            style={inputStyle("position")}
-            onFocus={(e) => {
-              e.target.style.borderColor = "var(--accent)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "var(--border)";
-            }}
+            placeholder="Tech Lead, Manager, Peer"
+            className="form-control-custom"
           />
         </div>
         <div className="col-12 col-sm-6">
@@ -260,21 +225,20 @@ const SubmitForm = ({ onSuccess }) => {
                 onClick={() => setForm((p) => ({ ...p, rating: star }))}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                aria-label={`Rate ${star} stars`}
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   padding: "0.25rem",
-                  transition: "transform 0.15s ease",
                 }}
               >
                 <FaStar
-                  size={26}
+                  size={24}
                   color={
                     (hoverRating || form.rating) >= star
-                      ? "#fbbf24"
-                      : "var(--border)"
+                      ? "#f59e0b"
+                      : "var(--border-strong)"
                   }
                   style={{ transition: "color 0.15s ease" }}
                 />
@@ -286,28 +250,18 @@ const SubmitForm = ({ onSuccess }) => {
                 fontSize: "0.85rem",
                 marginLeft: "0.5rem",
                 alignSelf: "center",
+                fontWeight: 600,
               }}
             >
-              {form.rating}/5
+              {form.rating} / 5
             </span>
           </div>
-          {errors.rating && (
-            <p
-              style={{
-                color: "var(--danger)",
-                fontSize: "0.78rem",
-                marginTop: "0.25rem",
-              }}
-            >
-              {errors.rating}
-            </p>
-          )}
         </div>
         <div className="col-12">
           <label className="form-label-custom" htmlFor="t-message">
-            Your Message *{" "}
+            Feedback & Remarks *{" "}
             <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
-              (min. 20 characters)
+              (minimum 20 characters)
             </span>
           </label>
           <textarea
@@ -316,57 +270,29 @@ const SubmitForm = ({ onSuccess }) => {
             value={form.message}
             onChange={handleChange}
             rows={4}
-            placeholder="Share your experience working with me..."
-            style={{ ...inputStyle("message"), resize: "vertical" }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "var(--accent)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = errors.message
-                ? "var(--danger)"
-                : "var(--border)";
-            }}
+            placeholder="Describe collaboration highlights, technical strengths, or project outcome..."
+            className="form-control-custom"
+            style={{ resize: "vertical" }}
           />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "0.25rem",
-            }}
-          >
-            {errors.message ? (
-              <p
-                style={{
-                  color: "var(--danger)",
-                  fontSize: "0.78rem",
-                  margin: 0,
-                }}
-              >
-                {errors.message}
-              </p>
-            ) : (
-              <span />
-            )}
-            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-              {form.message.length}/1000
-            </span>
-          </div>
+          {errors.message && (
+            <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
+              {errors.message}
+            </p>
+          )}
         </div>
         <div className="col-12">
-          <motion.button
+          <button
             type="submit"
             disabled={loading}
-            whileHover={{ scale: loading ? 1 : 1.02 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
             className="btn-accent"
             style={{
               width: "100%",
               justifyContent: "center",
-              opacity: loading ? 0.7 : 1,
+              padding: "0.85rem",
             }}
           >
-            {loading ? "Submitting..." : "✉ Submit Testimonial"}
-          </motion.button>
+            {loading ? "Submitting Review..." : "Submit Testimonial"}
+          </button>
         </div>
       </div>
     </form>
@@ -382,7 +308,7 @@ function Testimonials() {
   const totalPages = Math.ceil(testimonials.length / perPage);
   const visible = testimonials.slice(
     current * perPage,
-    current * perPage + perPage,
+    current * perPage + perPage
   );
 
   return (
@@ -393,21 +319,31 @@ function Testimonials() {
     >
       <div className="container-xl px-4">
         <SectionHeader
-          title="What People"
-          highlight="Say"
-          subtitle="Kind words from colleagues and mentors who I've worked with."
+          title="Client & Peer"
+          highlight="Endorsements"
+          subtitle="Direct impressions and peer recommendations from developers and teams I've collaborated with."
         />
 
-        {loading && <LoadingSpinner message="Loading testimonials..." />}
+        {loading && <LoadingSpinner message="Retrieving endorsements..." />}
 
         {!loading && testimonials.length === 0 && (
           <div
             className="text-center"
-            style={{ padding: "3rem 0", marginBottom: "2rem" }}
+            style={{
+              padding: "3.5rem 2rem",
+              background: "var(--bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--border)",
+              maxWidth: 600,
+              margin: "0 auto 3rem",
+            }}
           >
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💬</div>
-            <p style={{ color: "var(--text-muted)" }}>
-              No testimonials yet. Be the first to share your experience!
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>💬</div>
+            <h4 style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+              No Public Endorsements Yet
+            </h4>
+            <p style={{ color: "var(--text-muted)", margin: 0 }}>
+              Be the first to share your experience working with me.
             </p>
           </div>
         )}
@@ -417,11 +353,11 @@ function Testimonials() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={current}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.4 }}
-                className="row g-4"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="row g-4 align-items-stretch"
               >
                 {visible.map((t) => (
                   <div key={t._id} className="col-12 col-md-6 col-lg-4">
@@ -438,30 +374,27 @@ function Testimonials() {
                   justifyContent: "center",
                   alignItems: "center",
                   gap: "1rem",
-                  marginTop: "2rem",
+                  marginTop: "2.5rem",
                 }}
               >
                 <button
                   onClick={() => setCurrent((p) => Math.max(0, p - 1))}
                   disabled={current === 0}
-                  aria-label="Previous testimonials"
+                  aria-label="Previous endorsements"
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     borderRadius: "50%",
-                    border: "1.5px solid var(--border)",
+                    border: "1px solid var(--border)",
                     background: "var(--bg-card)",
-                    color:
-                      current === 0
-                        ? "var(--text-muted)"
-                        : "var(--text-primary)",
+                    color: current === 0 ? "var(--text-muted)" : "var(--text-primary)",
                     cursor: current === 0 ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <FaChevronLeft size={14} />
+                  <FaChevronLeft size={13} />
                 </button>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   {Array.from({ length: totalPages }).map((_, i) => (
@@ -474,59 +407,53 @@ function Testimonials() {
                         height: 10,
                         borderRadius: "50%",
                         border: "none",
-                        background:
-                          i === current ? "var(--accent)" : "var(--border)",
+                        background: i === current ? "var(--accent)" : "var(--border)",
                         cursor: "pointer",
                         padding: 0,
-                        transition: "background 0.2s ease",
                       }}
                     />
                   ))}
                 </div>
                 <button
-                  onClick={() =>
-                    setCurrent((p) => Math.min(totalPages - 1, p + 1))
-                  }
+                  onClick={() => setCurrent((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={current === totalPages - 1}
-                  aria-label="Next testimonials"
+                  aria-label="Next endorsements"
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     borderRadius: "50%",
-                    border: "1.5px solid var(--border)",
+                    border: "1px solid var(--border)",
                     background: "var(--bg-card)",
-                    color:
-                      current === totalPages - 1
-                        ? "var(--text-muted)"
-                        : "var(--text-primary)",
-                    cursor:
-                      current === totalPages - 1 ? "not-allowed" : "pointer",
+                    color: current === totalPages - 1 ? "var(--text-muted)" : "var(--text-primary)",
+                    cursor: current === totalPages - 1 ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <FaChevronRight size={14} />
+                  <FaChevronRight size={13} />
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Submit Testimonial */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          style={{ maxWidth: 700, margin: "0 auto" }}
-        >
-          <div className="card-custom" style={{ padding: "2rem" }}>
+        {/* Action Panel to Write Testimonial */}
+        <div style={{ maxWidth: 740, margin: "0 auto" }}>
+          <div
+            className="card-custom"
+            style={{
+              padding: "2rem",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-xl)",
+            }}
+          >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: showForm ? "1.5rem" : 0,
                 flexWrap: "wrap",
                 gap: "1rem",
               }}
@@ -535,38 +462,39 @@ function Testimonials() {
                 <h4
                   style={{
                     color: "var(--text-primary)",
-                    fontWeight: 700,
+                    fontWeight: 800,
                     margin: "0 0 0.25rem",
-                    fontSize: "1.1rem",
+                    fontSize: "1.2rem",
                   }}
                 >
-                  Share Your Experience
+                  Worked With Me?
                 </h4>
                 <p
                   style={{
                     color: "var(--text-muted)",
                     margin: 0,
-                    fontSize: "0.875rem",
+                    fontSize: "0.9rem",
                   }}
                 >
-                  Worked with me? I'd love to hear your feedback!
+                  Leave a verified review regarding code quality, delivery speed, or collaboration.
                 </p>
               </div>
+
               <button
                 onClick={() => setShowForm((p) => !p)}
                 className={showForm ? "btn-outline-accent" : "btn-accent"}
-                style={{ flexShrink: 0 }}
               >
-                {showForm ? "✕ Cancel" : "✍ Write a Review"}
+                {showForm ? "Cancel Form" : "✍ Write an Endorsement"}
               </button>
             </div>
+
             <AnimatePresence>
               {showForm && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.35 }}
+                  transition={{ duration: 0.3 }}
                   style={{ overflow: "hidden" }}
                 >
                   <SubmitForm
@@ -579,7 +507,7 @@ function Testimonials() {
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

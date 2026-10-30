@@ -1,10 +1,5 @@
 const Experience = require('../models/Experience');
 
-// Normalize a raw payload before handing it to Mongoose.
-// Converts comma/newline-separated strings into arrays.
-// Converts empty-string Date fields to null (Mongoose throws a CastError
-//  on an empty string for a Date field, which happens whenever the
-// "I currently work here" checkbox is ticked and endDate is left blank).
 const normalizePayload = (data) => {
     const payload = { ...data };
 
@@ -22,15 +17,13 @@ const normalizePayload = (data) => {
             .filter(Boolean);
     }
 
-    // Guard against empty-string Date values (CastError otherwise)
-    if (payload.endDate === '' || payload.endDate === undefined) {
+    if (payload.endDate === '' || payload.endDate === undefined || payload.endDate === 'null') {
         payload.endDate = null;
     }
     if (payload.startDate === '') {
-        delete payload.startDate; // let required-field validation catch it
+        delete payload.startDate;
     }
 
-    // If marked as current, endDate should always be null regardless of what was sent
     if (payload.isCurrent === true || payload.isCurrent === 'true') {
         payload.endDate = null;
     }
@@ -40,11 +33,11 @@ const normalizePayload = (data) => {
 
 const getAllExperience = async (onlyVisible = false) => {
     const query = onlyVisible ? { isVisible: true } : {};
-    return Experience.find(query).sort({ order: 1, startDate: -1 });
+    return Experience.find(query).sort({ order: 1, startDate: -1 }).lean();
 };
 
 const getExperienceById = async (id) => {
-    const exp = await Experience.findById(id);
+    const exp = await Experience.findById(id).lean();
     if (!exp) throw { statusCode: 404, message: 'Experience not found.' };
     return exp;
 };

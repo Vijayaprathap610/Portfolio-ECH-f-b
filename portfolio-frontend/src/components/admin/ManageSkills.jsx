@@ -13,7 +13,7 @@ import {
 } from "../../api/skillsApi";
 import { AnimatePresence } from "framer-motion";
 
-const CATEGORIES = ["Frontend", "Backend", "Database", "Tools", "Soft Skills"];
+const CATEGORIES = ["Frontend", "Backend", "Database", "UI/UX Design", "Tools", "Soft Skills"];
 const FORM_INITIAL = {
   name: "",
   category: "Frontend",

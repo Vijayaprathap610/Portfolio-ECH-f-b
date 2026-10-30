@@ -12,8 +12,8 @@ const skillSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Category is required.'],
             enum: {
-                values: ['Frontend', 'Backend', 'Database', 'Tools', 'Soft Skills'],
-                message: 'Category must be one of: Frontend, Backend, Database, Tools, Soft Skills.',
+                values: ['Frontend', 'Backend', 'Database', 'Tools', 'Soft Skills', 'UI/UX Design', 'UI/UX'],
+                message: 'Category must be one of: Frontend, Backend, Database, Tools, Soft Skills, UI/UX Design.',
             },
         },
         percentage: {
@@ -29,7 +29,7 @@ const skillSchema = new mongoose.Schema(
         },
         color: {
             type: String,
-            default: '#6c63ff',
+            default: '#10b981',
             trim: true,
             match: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Please enter a valid hex color.'],
         },

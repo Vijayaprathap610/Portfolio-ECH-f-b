@@ -15,7 +15,7 @@ import { FiCheck, FiTrash2, FiX } from "react-icons/fi";
 
 const STATUS_COLORS = {
   pending: "#f59e0b",
-  approved: "#10b981",
+  approved: "#d4a04a",
   rejected: "#ef4444",
 };
 

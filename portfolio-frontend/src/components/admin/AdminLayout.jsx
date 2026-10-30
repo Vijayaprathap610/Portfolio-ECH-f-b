@@ -3,13 +3,14 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import Sidebar from "./Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiMoon, FiSun } from "react-icons/fi";
+import { FiMoon, FiSun, FiExternalLink, FiShield } from "react-icons/fi";
 import { Outlet } from "react-router-dom";
 
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const { toggleTheme, isDark } = useTheme();
   const { admin } = useAuth();
+
   return (
     <div
       style={{
@@ -21,7 +22,7 @@ function AdminLayout() {
       {/* Sidebar */}
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((p) => !p)} />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div
         style={{
           flex: 1,
@@ -31,7 +32,7 @@ function AdminLayout() {
           overflow: "hidden",
         }}
       >
-        {/* Top Bar */}
+        {/* Top Header Bar */}
         <header
           style={{
             background: "var(--bg-secondary)",
@@ -47,13 +48,55 @@ function AdminLayout() {
             gap: "1rem",
           }}
         >
-          {/* Page title placeholder (children set their own) */}
-          <div style={{ flex: 1 }} />
+          {/* Breadcrumb / Status Badge */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.25rem 0.65rem",
+                borderRadius: "var(--radius-full)",
+                background: "rgba(var(--accent-rgb), 0.12)",
+                color: "var(--accent-light)",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                border: "1px solid rgba(var(--accent-rgb), 0.2)",
+              }}
+            >
+              <FiShield size={12} /> Elite Code Hub Control Center
+            </span>
+          </div>
 
-          {/* Actions */}
+          {/* Top Actions */}
           <div
             style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
           >
+            {/* View Live Portfolio Link */}
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                padding: "0.4rem 0.85rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--border)",
+                background: "var(--bg-card)",
+                color: "var(--text-secondary)",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                textDecoration: "none",
+                transition: "all var(--transition-fast)",
+              }}
+            >
+              <FiExternalLink size={13} color="var(--accent-light)" />
+              <span className="d-none d-sm-inline">Live Website</span>
+            </a>
+
+            {/* Dark / Light Mode Switch */}
             <button
               onClick={toggleTheme}
               aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
@@ -84,12 +127,13 @@ function AdminLayout() {
               </AnimatePresence>
             </button>
 
+            {/* Admin Profile Snapshot */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.6rem",
-                padding: "0.4rem 0.75rem",
+                padding: "0.35rem 0.75rem",
                 borderRadius: "var(--radius-md)",
                 background: "var(--bg-card)",
                 border: "1px solid var(--border)",
@@ -100,7 +144,7 @@ function AdminLayout() {
                   width: 28,
                   height: 28,
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--accent), #a78bfa)",
+                  background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -121,21 +165,23 @@ function AdminLayout() {
                 <p
                   style={{
                     color: "var(--text-primary)",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     margin: 0,
                     fontSize: "0.8rem",
+                    lineHeight: 1.1,
                   }}
                 >
-                  {admin?.name}
+                  {admin?.name || "VIJAYAPRATHAP K"}
                 </p>
                 <p
                   style={{
-                    color: "var(--text-muted)",
+                    color: "var(--accent-light)",
                     margin: 0,
-                    fontSize: "0.7rem",
+                    fontSize: "0.68rem",
+                    fontWeight: 600,
                   }}
                 >
-                  {admin?.role}
+                  {admin?.role || "Administrator"}
                 </p>
               </div>
             </div>
@@ -143,7 +189,14 @@ function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main style={{ flex: 1, padding: "2rem 1.5rem", overflowY: "auto" }}>
+        <main
+          style={{
+            flex: 1,
+            padding: "2rem 1.5rem",
+            overflowY: "auto",
+            background: "var(--bg-primary)",
+          }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSun, FiMoon, FiMenu, FiX, FiCode } from "react-icons/fi";
+import { FiSun, FiMoon, FiMenu, FiX, FiCode, FiBriefcase } from "react-icons/fi";
 import { useTheme } from "../../context/ThemeContext";
 import { scrollToSection } from "../../utils/helpers";
 import useScrollSpy from "../../hooks/useScrollSpy";
@@ -16,11 +16,6 @@ const NAV_LINKS = [
   { label: "Contact", href: "contact" },
 ];
 
-// Precomputed once at module scope so the array reference never changes
-// across renders. Passing `NAV_LINKS.map(l => l.href)` directly inline would
-// create a brand-new array on every render, causing useScrollSpy's effect
-// (which depends on this array) to tear down and rebuild its scroll
-// listener on every single re-render of Navbar.
 const NAV_SECTION_IDS = NAV_LINKS.map((l) => l.href);
 
 function Navbar() {
@@ -39,6 +34,19 @@ function Navbar() {
     scrollToSection(href);
     setIsOpen(false);
   };
+
+  const handleHireMe = () => {
+    scrollToSection("contact");
+    setIsOpen(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("select-contact-purpose", {
+          detail: "Employment Opportunity",
+        })
+      );
+    }
+  };
+
   return (
     <>
       <motion.nav
@@ -99,53 +107,46 @@ function Navbar() {
               <span
                 style={{
                   fontWeight: 800,
-                  fontSize: "1.1rem",
-                  fontFamily: "var(--font-primary)",
+                  fontSize: "1.15rem",
                   color: "var(--text-primary)",
-                  letterSpacing: "-0.02em",
+                  fontFamily: "var(--font-display)",
                 }}
               >
                 Elite<span style={{ color: "var(--accent)" }}>Code</span>Hub
               </span>
             </motion.button>
 
-            {/* Desktop Nav Links */}
+            {/* Desktop Navigation */}
             <nav
-              role="navigation"
-              aria-label="Main navigation"
-              style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}
-              className="d-none d-lg-flex"
+              className="d-none d-lg-flex align-items-center"
+              style={{ gap: "0.25rem" }}
             >
               {NAV_LINKS.map((link) => (
                 <button
                   key={link.href}
                   onClick={() => handleNavClick(link.href)}
                   style={{
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "0.5rem 0.875rem",
-                    borderRadius: "var(--radius-full)",
-                    fontFamily: "var(--font-primary)",
-                    fontWeight: 500,
-                    fontSize: "0.9rem",
-                    color:
-                      activeSection === link.href
-                        ? "var(--accent)"
-                        : "var(--text-secondary)",
                     background:
                       activeSection === link.href
                         ? "rgba(var(--accent-rgb), 0.1)"
                         : "transparent",
-                    transition: "all 0.2s ease",
-                    position: "relative",
+                    border: "none",
+                    borderRadius: "var(--radius-full)",
+                    padding: "0.45rem 0.9rem",
+                    color:
+                      activeSection === link.href
+                        ? "var(--accent-light)"
+                        : "var(--text-secondary)",
+                    fontWeight: activeSection === link.href ? 700 : 500,
+                    fontSize: "0.875rem",
+                    cursor: "pointer",
+                    transition: "all var(--transition-fast)",
+                    fontFamily: "var(--font-primary)",
                   }}
-                  aria-current={
-                    activeSection === link.href ? "true" : undefined
-                  }
                   onMouseEnter={(e) => {
                     if (activeSection !== link.href) {
                       e.target.style.color = "var(--text-primary)";
-                      e.target.style.background = "var(--bg-card)";
+                      e.target.style.background = "rgba(255, 255, 255, 0.05)";
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -164,6 +165,20 @@ function Navbar() {
             <div
               style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
             >
+              {/* Hire Me CTA Button */}
+              <button
+                onClick={handleHireMe}
+                className="btn-accent d-none d-sm-inline-flex"
+                style={{
+                  padding: "0.45rem 1.15rem",
+                  fontSize: "0.825rem",
+                  gap: "0.45rem",
+                }}
+                aria-label="Hire Me"
+              >
+                <FiBriefcase size={13} /> Hire Me
+              </button>
+
               {/* Theme Toggle */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -173,8 +188,8 @@ function Navbar() {
                   background: "var(--bg-card)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius-full)",
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -191,7 +206,7 @@ function Navbar() {
                     exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {isDark ? <FiSun size={17} /> : <FiMoon size={17} />}
+                    {isDark ? <FiSun size={16} /> : <FiMoon size={16} />}
                   </motion.span>
                 </AnimatePresence>
               </motion.button>
@@ -206,8 +221,8 @@ function Navbar() {
                   background: "var(--bg-card)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius-md)",
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -215,7 +230,7 @@ function Navbar() {
                   color: "var(--text-primary)",
                 }}
               >
-                {isOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+                {isOpen ? <FiX size={18} /> : <FiMenu size={18} />}
               </button>
             </div>
           </div>
@@ -273,12 +288,12 @@ function Navbar() {
                         : "transparent",
                     border: "none",
                     borderRadius: "var(--radius-md)",
-                    padding: "0.9rem 1.25rem",
+                    padding: "0.85rem 1.15rem",
                     textAlign: "left",
                     cursor: "pointer",
                     fontFamily: "var(--font-primary)",
                     fontWeight: 500,
-                    fontSize: "1rem",
+                    fontSize: "0.95rem",
                     color:
                       activeSection === link.href
                         ? "var(--accent)"
@@ -289,6 +304,16 @@ function Navbar() {
                   {link.label}
                 </motion.button>
               ))}
+
+              <div style={{ marginTop: "1.5rem" }}>
+                <button
+                  onClick={handleHireMe}
+                  className="btn-accent"
+                  style={{ width: "100%", justifyContent: "center" }}
+                >
+                  <FiBriefcase size={14} /> Hire Me
+                </button>
+              </div>
             </motion.div>
           </>
         )}

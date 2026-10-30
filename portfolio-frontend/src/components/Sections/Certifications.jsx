@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaAward,
@@ -22,13 +23,14 @@ const CATEGORY_ICONS = {
 
 const CertCard = ({ cert, index }) => {
   const Icon = CATEGORY_ICONS[cert.category] || FaAward;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
       className="card-custom"
       style={{
         padding: 0,
@@ -36,25 +38,29 @@ const CertCard = ({ cert, index }) => {
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius-lg)",
       }}
     >
-      {/* Certificate Image */}
+      {/* Banner / Certificate image */}
       <div
         style={{
           position: "relative",
           aspectRatio: "16/9",
-          background:
-            "linear-gradient(135deg, rgba(var(--accent-rgb),0.15), rgba(167,139,250,0.15))",
+          background: "var(--bg-secondary)",
           overflow: "hidden",
           flexShrink: 0,
+          borderBottom: "1px solid var(--border)",
         }}
       >
-        {cert.image ? (
+        {cert.image && !imgError ? (
           <img
             src={getImageUrl(cert.image)}
             alt={`${cert.title} certificate`}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
             loading="lazy"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div
@@ -64,39 +70,42 @@ const CertCard = ({ cert, index }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              background: "linear-gradient(135deg, rgba(var(--accent-rgb), 0.08), rgba(245, 158, 11, 0.08))",
             }}
           >
-            <Icon size={48} color="var(--accent)" style={{ opacity: 0.4 }} />
+            <Icon size={40} color="var(--accent-light)" style={{ opacity: 0.6 }} />
           </div>
         )}
-        {/* Category badge */}
+
+        {/* Badge category */}
         <div style={{ position: "absolute", top: 10, right: 10 }}>
           <span
             className="badge-custom"
             style={{
               fontSize: "0.7rem",
-              background: "rgba(0,0,0,0.6)",
-              backdropFilter: "blur(8px)",
+              background: "rgba(9, 13, 22, 0.75)",
               color: "white",
               borderColor: "rgba(255,255,255,0.2)",
+              backdropFilter: "blur(4px)",
             }}
           >
             <Icon size={10} /> {cert.category}
           </span>
         </div>
+
         {cert.isFeatured && (
           <div style={{ position: "absolute", top: 10, left: 10 }}>
             <span
               style={{
-                padding: "0.25rem 0.6rem",
+                padding: "0.2rem 0.6rem",
                 borderRadius: "var(--radius-full)",
-                background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
                 color: "white",
-                fontSize: "0.7rem",
+                fontSize: "0.685rem",
                 fontWeight: 700,
               }}
             >
-              ⭐ Featured
+              Featured
             </span>
           </div>
         )}
@@ -114,20 +123,20 @@ const CertCard = ({ cert, index }) => {
         <h5
           style={{
             color: "var(--text-primary)",
-            fontWeight: 700,
-            fontSize: "0.95rem",
-            marginBottom: "0.4rem",
-            lineHeight: 1.4,
+            fontWeight: 800,
+            fontSize: "1rem",
+            marginBottom: "0.35rem",
+            lineHeight: 1.35,
           }}
         >
           {cert.title}
         </h5>
         <p
           style={{
-            color: "var(--accent)",
+            color: "var(--accent-light)",
             fontWeight: 600,
             fontSize: "0.85rem",
-            marginBottom: "0.75rem",
+            marginBottom: "0.6rem",
           }}
         >
           {cert.organization}
@@ -136,10 +145,14 @@ const CertCard = ({ cert, index }) => {
         {cert.description && (
           <p
             style={{
-              color: "var(--text-muted)",
-              fontSize: "0.8rem",
+              color: "var(--text-secondary)",
+              fontSize: "0.825rem",
               lineHeight: 1.6,
-              marginBottom: "0.75rem",
+              marginBottom: "0.85rem",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
             {cert.description}
@@ -153,7 +166,7 @@ const CertCard = ({ cert, index }) => {
               display: "flex",
               flexWrap: "wrap",
               gap: "0.3rem",
-              marginBottom: "0.75rem",
+              marginBottom: "1rem",
             }}
           >
             {cert.skills.map((skill) => (
@@ -166,6 +179,7 @@ const CertCard = ({ cert, index }) => {
                   color: "var(--text-muted)",
                   fontSize: "0.7rem",
                   border: "1px solid var(--border)",
+                  fontWeight: 600,
                 }}
               >
                 {skill}
@@ -174,30 +188,28 @@ const CertCard = ({ cert, index }) => {
           </div>
         )}
 
+        {/* Footer date & link */}
         <div
           style={{
             marginTop: "auto",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            flexWrap: "wrap",
-            gap: "0.5rem",
+            paddingTop: "0.75rem",
+            borderTop: "1px solid var(--divider)",
           }}
         >
           <span
             style={{
               color: "var(--text-muted)",
-              fontSize: "0.78rem",
-              display: "flex",
+              fontSize: "0.75rem",
+              display: "inline-flex",
               alignItems: "center",
               gap: "0.3rem",
             }}
           >
-            <FaCalendarAlt size={11} />
+            <FaCalendarAlt size={10} />
             {formatMonthYear(cert.issueDate)}
-            {cert.doesExpire &&
-              cert.expiryDate &&
-              ` → ${formatMonthYear(cert.expiryDate)}`}
           </span>
 
           {cert.credentialUrl && (
@@ -206,8 +218,11 @@ const CertCard = ({ cert, index }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline-accent"
-              style={{ padding: "0.35rem 0.875rem", fontSize: "0.78rem" }}
-              aria-label={`Verify ${cert.title} credential`}
+              style={{
+                padding: "0.35rem 0.75rem",
+                fontSize: "0.75rem",
+              }}
+              aria-label={`Verify ${cert.title}`}
             >
               <FaExternalLinkAlt size={10} /> Verify
             </a>
@@ -221,6 +236,7 @@ const CertCard = ({ cert, index }) => {
 function Certifications() {
   const { data, loading, error } = useFetch(getCertifications);
   const certs = data?.data || [];
+
   return (
     <section
       id="certifications"
@@ -229,9 +245,9 @@ function Certifications() {
     >
       <div className="container-xl px-4">
         <SectionHeader
-          title="Certifications &"
-          highlight="Achievements"
-          subtitle="Proof of my continuous learning and professional development."
+          title="Verified"
+          highlight="Certifications & Awards"
+          subtitle="Accredited technical credentials, program completions, and professional development milestones."
         />
 
         {loading && (
@@ -247,23 +263,38 @@ function Certifications() {
         {error && (
           <div
             className="text-center"
-            style={{ color: "var(--danger)", padding: "2rem" }}
+            style={{
+              color: "var(--danger)",
+              padding: "2rem",
+              background: "var(--bg-card)",
+              borderRadius: "var(--radius-lg)",
+            }}
           >
-            <p>Failed to load certifications. Please try again later.</p>
+            <p style={{ margin: 0 }}>Failed to load certifications.</p>
           </div>
         )}
 
         {!loading && !error && certs.length === 0 && (
-          <div className="text-center" style={{ padding: "4rem 0" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🏆</div>
-            <p style={{ color: "var(--text-muted)" }}>
-              No certifications added yet.
+          <div
+            className="text-center"
+            style={{
+              padding: "4rem 2rem",
+              background: "var(--bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--border)",
+              maxWidth: 550,
+              margin: "0 auto",
+            }}
+          >
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>🏆</div>
+            <p style={{ color: "var(--text-muted)", margin: 0 }}>
+              No certifications currently registered.
             </p>
           </div>
         )}
 
         {!loading && !error && certs.length > 0 && (
-          <div className="row g-4">
+          <div className="row g-4 align-items-stretch">
             {certs.map((cert, i) => (
               <div key={cert._id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <CertCard cert={cert} index={i} />

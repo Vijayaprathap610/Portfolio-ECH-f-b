@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { getImageUrl, scrollToSection } from "../../utils/helpers";
 import {
   FaBriefcase,
@@ -7,15 +7,16 @@ import {
   FaEnvelope,
   FaGithub,
   FaLinkedin,
-  FaMapMarkerAlt,
   FaInstagram,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
-import { FiArrowDown } from "react-icons/fi";
+import { FiArrowDown, FiShield, FiCpu } from "react-icons/fi";
 
-function Hero({ profile }) {
+function Hero({ profile, projectsCount = 0, skillsCount = 0, experienceCount = 1 }) {
   const canvasRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
 
-  // Animated particle background
+  // Constellation particle background — Electric Indigo & Cyan accent
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -29,13 +30,14 @@ function Hero({ profile }) {
     resize();
     window.addEventListener("resize", resize);
 
-    const particles = Array.from({ length: 60 }, () => ({
+    const particles = Array.from({ length: 48 }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      r: Math.random() * 2 + 1,
-      opacity: Math.random() * 0.4 + 0.1,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 1.6 + 1,
+      opacity: Math.random() * 0.4 + 0.15,
+      isCyan: Math.random() > 0.5,
     }));
 
     const draw = () => {
@@ -48,20 +50,22 @@ function Hero({ profile }) {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(108, 99, 255, ${p.opacity})`;
+        ctx.fillStyle = p.isCyan
+          ? `rgba(6, 182, 212, ${p.opacity})`
+          : `rgba(99, 102, 241, ${p.opacity})`;
         ctx.fill();
       });
 
-      // Draw connecting lines
+      // Connecting lines with subtle electric tint
       particles.forEach((p1, i) => {
         particles.slice(i + 1).forEach((p2) => {
           const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-          if (dist < 120) {
+          if (dist < 110) {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(108, 99, 255, ${0.08 * (1 - dist / 120)})`;
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.12 * (1 - dist / 110)})`;
+            ctx.lineWidth = 0.65;
             ctx.stroke();
           }
         });
@@ -77,20 +81,101 @@ function Hero({ profile }) {
     };
   }, []);
 
+  // Multi-stage animation state:
+  // Stage 1: Entrance (slides down smoothly from navbar) -> 0ms to 1200ms
+  // Stage 2: Left-and-right swing + Stage 3 vertical settling bounce -> 1200ms to 3600ms
+  // Stage 4: Continuous 4-direction movement (Left, Right, Up, Down) -> 3600ms onwards
+  const [animStage, setAnimStage] = useState("entrance");
+
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+
+    const timer1 = setTimeout(() => {
+      setAnimStage("swing");
+    }, 1200);
+
+    const timer2 = setTimeout(() => {
+      setAnimStage("continuous");
+    }, 3600);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [shouldReduceMotion]);
+
   const name = profile?.fullName || "VIJAYAPRATHAP K";
-  const title = profile?.title || "Full Stack MERN Developer";
   const bio =
-    profile?.bio?.substring(0, 180) +
-      (profile?.bio?.length > 180 ? "..." : "") || "";
-  const photo = profile?.profilePhoto
-    ? getImageUrl(profile.profilePhoto)
-    : null;
+    profile?.bio ||
+    "Specialized in architecting high-throughput React frontends, scalable Node.js microservices, and reliable MongoDB schemas with clean engineering practices.";
+  const photo = profile?.profilePhoto ? getImageUrl(profile.profilePhoto) : null;
   const github = profile?.socialLinks?.github;
   const linkedin = profile?.socialLinks?.linkedin;
   const instagram = profile?.socialLinks?.instagram;
   const location = profile?.location || "India";
   const email = profile?.email || "";
   const resumeUrl = profile?.resumeUrl || "#";
+
+  const handleHireMeClick = (purpose = "Employment Opportunity") => {
+    scrollToSection("contact");
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("select-contact-purpose", { detail: purpose })
+      );
+    }
+  };
+
+  // Hanging ID Card Animation Variants (Hinged at top anchor)
+  const hangingVariants = {
+    initial: {
+      y: -150,
+      opacity: 0,
+      rotate: -3.5,
+    },
+    entrance: {
+      y: 0,
+      opacity: 1,
+      rotate: 0,
+      transition: {
+        type: "spring",
+        damping: 16,
+        stiffness: 85,
+        mass: 1.1,
+      },
+    },
+    swing: {
+      opacity: 1,
+      rotate: [0, -4, 3.5, -2.5, 2, -1, 0.5, 0],
+      y: [0, 4, -2, 2, 0],
+      transition: {
+        duration: 2.4,
+        ease: "easeInOut",
+      },
+    },
+    continuous: {
+      opacity: 1,
+      x: [-3, 3, -3],
+      y: [-3.5, 2.5, -3.5],
+      rotate: [-1.4, 1.4, -1.4],
+      transition: {
+        x: {
+          duration: 4.8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        y: {
+          duration: 3.4,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        rotate: {
+          duration: 4.8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      },
+    },
+  };
 
   return (
     <section
@@ -104,7 +189,7 @@ function Hero({ profile }) {
         background: "var(--bg-primary)",
       }}
     >
-      {/* Particle Canvas */}
+      {/* Constellation Canvas in Electric Indigo & Cyan */}
       <canvas
         ref={canvasRef}
         style={{
@@ -117,17 +202,17 @@ function Hero({ profile }) {
         }}
       />
 
-      {/* Radial Gradient Blob */}
+      {/* Atmospheric Ambient Glow — Distinctive Cosmic Violet/Cyan */}
       <div
         style={{
           position: "absolute",
-          top: "20%",
+          top: "10%",
           left: "50%",
           transform: "translateX(-50%)",
-          width: 600,
-          height: 600,
+          width: 720,
+          height: 720,
           background:
-            "radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.05) 50%, transparent 70%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -135,213 +220,193 @@ function Hero({ profile }) {
 
       <div
         className="container-xl px-4"
-        style={{ position: "relative", zIndex: 1, paddingTop: "80px" }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          paddingTop: "90px",
+          paddingBottom: "50px",
+        }}
       >
         <div className="row align-items-center g-5">
-          {/* Text Side */}
+          {/* Hero Typography & CTA */}
           <div className="col-12 col-lg-7 order-2 order-lg-1">
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.6 }}
             >
-              {/* Status Badge */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
+              {/* Engineering Status Pill — Distinctive Emerald Green */}
+              <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: "0.55rem",
                   padding: "0.4rem 1rem",
                   borderRadius: "var(--radius-full)",
-                  background: "rgba(16, 185, 129, 0.1)",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
-                  marginBottom: "1.5rem",
+                  background: "rgba(16, 185, 129, 0.12)",
+                  border: "1px solid rgba(16, 185, 129, 0.35)",
+                  boxShadow: "0 0 16px rgba(16, 185, 129, 0.15)",
+                  marginBottom: "1.35rem",
                 }}
               >
                 <span
                   style={{
-                    width: 8,
-                    height: 8,
+                    width: 9,
+                    height: 9,
                     borderRadius: "50%",
                     background: "#10b981",
-                    display: "inline-block",
-                    boxShadow: "0 0 8px #10b981",
-                    animation: "pulse 2s infinite",
+                    boxShadow: "0 0 10px #10b981, 0 0 4px #34d399",
                   }}
                 />
-                <style>{`@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }`}</style>
                 <span
                   style={{
                     color: "#10b981",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
+                    fontSize: "0.825rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.02em",
                   }}
                 >
-                  Available for opportunities
+                  Available for Full-Time & Contract Opportunities
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.7 }}
+              {/* Headline with Brown / Warm Bronze Name */}
+              <h1
                 style={{
-                  fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                  fontSize: "clamp(2.3rem, 5vw, 3.8rem)",
                   fontWeight: 900,
-                  lineHeight: 1.1,
-                  marginBottom: "0.75rem",
+                  lineHeight: 1.15,
+                  marginBottom: "1.25rem",
                   letterSpacing: "-0.03em",
+                  color: "var(--text-primary)",
                 }}
               >
-                Hi, I'm <span className="gradient-text">{name}</span>
-              </motion.h1>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                style={{ marginBottom: "1.25rem" }}
-              >
+                Hi, I'm{" "}
                 <span
                   style={{
-                    fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)",
-                    fontWeight: 600,
-                    color: "var(--accent)",
-                    fontFamily: "var(--font-mono)",
-                    background: "rgba(var(--accent-rgb), 0.08)",
-                    padding: "0.3rem 0.8rem",
-                    borderRadius: "var(--radius-sm)",
-                    borderLeft: "3px solid var(--accent)",
+                    background:
+                      "linear-gradient(135deg, #d97706 0%, #b45309 40%, #78350f 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    fontWeight: 900,
                   }}
                 >
-                  {title}
+                  VIJAYAPRATHAP K
                 </span>
-              </motion.div>
+                , a{" "}
+                <span style={{ color: "var(--accent-light)" }}>
+                  Full Stack MERN
+                </span>{" "}
+                Web Developer.
+              </h1>
 
-              {bio && (
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  style={{
-                    fontSize: "1rem",
-                    color: "var(--text-secondary)",
-                    lineHeight: 1.8,
-                    maxWidth: 560,
-                    marginBottom: "1.5rem",
-                  }}
-                >
-                  {bio}
-                </motion.p>
-              )}
+              {/* Bio / Description */}
+              <p
+                style={{
+                  fontSize: "1.05rem",
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.85,
+                  maxWidth: 620,
+                  marginBottom: "1.75rem",
+                }}
+              >
+                {bio}
+              </p>
 
-              {/* Quick Info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+              {/* Location & Email Details */}
+              <div
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "1rem",
+                  gap: "1.25rem",
                   marginBottom: "2rem",
                 }}
               >
                 {location && (
                   <span
                     style={{
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
-                      gap: "0.4rem",
+                      gap: "0.45rem",
                       color: "var(--text-muted)",
-                      fontSize: "0.9rem",
+                      fontSize: "0.875rem",
                     }}
                   >
-                    <FaMapMarkerAlt size={13} color="var(--accent)" />{" "}
-                    {location}
+                    <FaMapMarkerAlt size={13} color="#0d9488" /> {location}
                   </span>
                 )}
                 {email && (
                   <span
                     style={{
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
-                      gap: "0.4rem",
+                      gap: "0.45rem",
                       color: "var(--text-muted)",
-                      fontSize: "0.9rem",
+                      fontSize: "0.875rem",
                     }}
                   >
-                    <FaEnvelope size={13} color="var(--accent)" /> {email}
+                    <FaEnvelope size={13} color="#6366f1" /> {email}
                   </span>
                 )}
-              </motion.div>
+              </div>
 
-              {/* CTA Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+              {/* Action Buttons with Hire Me Flow — Dark Blue Button */}
+              <div
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "1rem",
-                  marginBottom: "2rem",
+                  gap: "0.9rem",
+                  marginBottom: "2.25rem",
                 }}
               >
                 <button
-                  onClick={() => scrollToSection("contact")}
+                  onClick={() => handleHireMeClick("Employment Opportunity")}
                   className="btn-accent"
-                  style={{ fontSize: "0.95rem" }}
+                  style={{
+                    padding: "0.75rem 1.85rem",
+                    fontSize: "0.95rem",
+                    textDecoration: "none",
+                  }}
+                  aria-label="Hire VIJAYAPRATHAP K"
                 >
-                  <FaBriefcase size={14} />
-                  Hire Me
+                  <FaBriefcase size={14} /> Hire Me
                 </button>
                 {resumeUrl && resumeUrl !== "#" && (
                   <a
                     href={resumeUrl}
                     download
                     className="btn-outline-accent"
-                    style={{ fontSize: "0.95rem" }}
-                    aria-label="Download my resume"
+                    style={{
+                      padding: "0.75rem 1.6rem",
+                      fontSize: "0.95rem",
+                      textDecoration: "none",
+                    }}
+                    aria-label="Download Curriculum Vitae"
                   >
-                    <FaDownload size={14} />
-                    Download CV
+                    <FaDownload size={13} /> Download Resume
                   </a>
                 )}
-              </motion.div>
+              </div>
 
-              {/* Social Links */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                style={{ display: "flex", gap: "0.75rem" }}
-              >
+              {/* Social Channels */}
+              <div style={{ display: "flex", gap: "0.75rem" }}>
                 {[
-                  { icon: FaGithub, href: github, label: "GitHub Profile" },
-                  {
-                    icon: FaLinkedin,
-                    href: linkedin,
-                    label: "LinkedIn Profile",
-                  },
-                  { icon: FaInstagram, href: instagram, label: "Instagram Profile" },
+                  { icon: FaGithub, href: github, label: "GitHub" },
+                  { icon: FaLinkedin, href: linkedin, label: "LinkedIn" },
+                  { icon: FaInstagram, href: instagram, label: "Instagram" },
                 ]
                   .filter((s) => s.href)
                   .map(({ icon: Icon, href, label }) => (
-                    <motion.a
+                    <a
                       key={label}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      whileHover={{ y: -3, scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
                       style={{
-                        width: 44,
-                        height: 44,
+                        width: 42,
+                        height: 42,
                         borderRadius: "var(--radius-md)",
                         background: "var(--bg-card)",
                         border: "1px solid var(--border)",
@@ -349,273 +414,400 @@ function Hero({ profile }) {
                         alignItems: "center",
                         justifyContent: "center",
                         color: "var(--text-secondary)",
-                        fontSize: 18,
-                        transition: "all 0.2s ease",
+                        transition: "all var(--transition-fast)",
+                        textDecoration: "none",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--accent)";
-                        e.currentTarget.style.color = "white";
+                        e.currentTarget.style.color = "var(--accent-light)";
                         e.currentTarget.style.borderColor = "var(--accent)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "var(--bg-card)";
                         e.currentTarget.style.color = "var(--text-secondary)";
                         e.currentTarget.style.borderColor = "var(--border)";
+                        e.currentTarget.style.transform = "none";
                       }}
                     >
-                      <Icon />
-                    </motion.a>
+                      <Icon size={17} />
+                    </a>
                   ))}
-              </motion.div>
+              </div>
             </motion.div>
           </div>
 
-          {/* ID Card Side */}
+          {/* Suspended Lanyard Assembly & Portrait ID Card */}
           <div className="col-12 col-lg-5 order-1 order-lg-2 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotateY: -20 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-              transition={{ duration: 0.8, delay: 0.3, type: "spring" }}
-              style={{ display: "inline-block", perspective: 1000 }}
-            >
+            <div className="hanging-assembly-wrapper">
+              {/* Lanyard Top Strap Anchored from the Navbar Edge */}
+              <div className="lanyard-strap-top" />
+
+              {/* The Entire Suspended Badge Assembly — Tag + Clasp + Card animates together */}
               <motion.div
-                animate={{ y: [0, -12, 0] }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                className="hanging-suspended-unit"
+                variants={shouldReduceMotion ? {} : hangingVariants}
+                initial={shouldReduceMotion ? false : "initial"}
+                animate={shouldReduceMotion ? { y: 0, opacity: 1, rotate: 0 } : animStage}
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 24,
-                  padding: 0,
-                  width: "min(340px, 90vw)",
-                  overflow: "hidden",
-                  boxShadow:
-                    "0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(var(--accent-rgb),0.2)",
-                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  transformOrigin: "top center",
+                  width: "100%",
                 }}
               >
-                {/* Card Header */}
-                <div
-                  style={{
-                    background:
-                      "linear-gradient(135deg, var(--accent), var(--accent-dark))",
-                    padding: "1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <p
-                      style={{
-                        color: "rgba(255,255,255,0.7)",
-                        fontSize: "0.7rem",
-                        margin: 0,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Developer ID Card
-                    </p>
-                    <p
-                      style={{
-                        color: "white",
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        margin: 0,
-                      }}
-                    >
-                      EliteCodeHub
-                    </p>
-                  </div>
-                  <FaGithub color="rgba(255,255,255,0.5)" size={28} />
-                </div>
-
-                {/* Photo */}
-                <div
-                  style={{
-                    padding: "1.5rem 1.5rem 1rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "1rem",
-                  }}
-                >
-                  <div
+                {/* Vertical Hanging Tag with Name VIJAYAPRATHAP K in Warm Bronze/Amber */}
+                <div className="lanyard-name-tag">
+                  <span className="lanyard-tag-label">STAFF PASS</span>
+                  <span
+                    className="lanyard-tag-name"
                     style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 16,
-                      border: "3px solid var(--accent)",
-                      overflow: "hidden",
-                      flexShrink: 0,
                       background:
-                        "linear-gradient(135deg, var(--accent), #a78bfa)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                        "linear-gradient(135deg, #d97706 0%, #a0522d 50%, #78350f 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt={name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        loading="eager"
-                      />
-                    ) : (
-                      <span
-                        style={{
-                          color: "white",
-                          fontWeight: 900,
-                          fontSize: "2rem",
-                        }}
-                      >
-                        {name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ textAlign: "left" }}>
-                    <h4
-                      style={{
-                        color: "var(--text-primary)",
-                        fontWeight: 800,
-                        fontSize: "1.05rem",
-                        margin: "0 0 0.25rem",
-                      }}
-                    >
-                      {name}
-                    </h4>
-                    <p
-                      style={{
-                        color: "var(--accent)",
-                        fontSize: "0.78rem",
-                        fontWeight: 600,
-                        margin: 0,
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      {title}
-                    </p>
-                  </div>
+                    VIJAYAPRATHAP K
+                  </span>
                 </div>
 
-                {/* Stats */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: 0,
-                    borderTop: "1px solid var(--border)",
-                  }}
-                >
-                  {[
-                    { label: "Projects", value: "5+" },
-                    { label: "Skills", value: "15+" },
-                    { label: "Experience", value: "3M" },
-                  ].map((stat, i) => (
-                    <div
-                      key={stat.label}
-                      style={{
-                        padding: "1rem 0.5rem",
-                        textAlign: "center",
-                        borderRight: i < 2 ? "1px solid var(--border)" : "none",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "1.4rem",
-                          fontWeight: 900,
-                          color: "var(--accent)",
-                        }}
-                      >
-                        {stat.value}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.72rem",
-                          color: "var(--text-muted)",
-                          marginTop: 2,
-                        }}
-                      >
-                        {stat.label}
+                {/* Metallic Swivel Clasp Connected to Card Punch Slot */}
+                <div className="lanyard-clasp-assembly">
+                  <div className="lanyard-swivel-ring" />
+                  <div className="lanyard-metallic-clasp" />
+                </div>
+
+                {/* Portrait-Oriented Rectangular ID Card (Lightly Reduced Height: 418px) */}
+                <div className="id-badge-portrait">
+                  {/* Physical Punch Hole Slot Centered at Top */}
+                  <div className="id-badge-punch-slot" />
+
+                  {/* Badge Header Strip — Distinct Royal Navy & Sapphire Gradient */}
+                  <div className="id-badge-portrait-header">
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                      <FiShield size={15} color="#ffffff" />
+                      <div>
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            fontSize: "0.78rem",
+                            color: "#ffffff",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                            display: "block",
+                            lineHeight: 1.1,
+                            fontFamily: "var(--font-display)",
+                          }}
+                        >
+                          Elite Code Hub
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.6rem",
+                            color: "rgba(255,255,255,0.85)",
+                            letterSpacing: "0.08em",
+                          }}
+                        >
+                          DEV IDENTITY
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* Tech Stack Chips */}
-                <div style={{ padding: "1rem 1.5rem 1.5rem" }}>
-                  <p
-                    style={{
-                      fontSize: "0.72rem",
-                      color: "var(--text-muted)",
-                      marginBottom: "0.6rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    Tech Stack
-                  </p>
-                  <div
-                    style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}
-                  >
-                    {[
-                      "React",
-                      "Node.js",
-                      "Express",
-                      "MongoDB",
-                      "JavaScript",
-                    ].map((t) => (
+                    <span
+                      style={{
+                        fontSize: "0.66rem",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        background: "rgba(0,0,0,0.25)",
+                        padding: "0.15rem 0.5rem",
+                        borderRadius: "var(--radius-full)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                      }}
+                    >
                       <span
-                        key={t}
-                        className="badge-custom"
-                        style={{ fontSize: "0.72rem" }}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: "#10b981",
+                          boxShadow: "0 0 6px #10b981",
+                        }}
+                      />
+                      VERIFIED
+                    </span>
+                  </div>
+
+                  {/* Badge Body */}
+                  <div className="id-badge-portrait-body">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.85rem",
+                        marginBottom: "0.75rem",
+                      }}
+                    >
+                      {/* Portrait Photo */}
+                      <div className="id-badge-photo-portrait">
+                        {photo ? (
+                          <img
+                            src={photo}
+                            alt={name}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                            onError={(e) => {
+                              const raw = profile?.profilePhoto;
+                              if (raw && !e.target.dataset.fallbackTried) {
+                                e.target.dataset.fallbackTried = "true";
+                                e.target.src = raw.startsWith('/') ? raw : `/${raw}`;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 800,
+                              color: "var(--accent-light)",
+                              fontSize: "1.5rem",
+                            }}
+                          >
+                            VK
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Employee Profile Information with Warm Bronze-Brown Name */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "0.66rem",
+                            fontWeight: 700,
+                            color: "#0d9488",
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
+                            marginBottom: "0.1rem",
+                          }}
+                        >
+                          Full Stack Engineer
+                        </span>
+                        <h3
+                          style={{
+                            margin: "0 0 0.15rem",
+                            fontWeight: 800,
+                            fontSize: "1.08rem",
+                            color: "#9c5421",
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          VIJAYAPRATHAP K
+                        </h3>
+                        <p
+                          style={{
+                            margin: "0 0 0.25rem",
+                            fontSize: "0.76rem",
+                            color: "var(--text-secondary)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          MERN Web Developer
+                        </p>
+                        <div
+                          style={{
+                            fontSize: "0.68rem",
+                            fontFamily: "var(--font-mono)",
+                            color: "var(--text-muted)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                          }}
+                        >
+                          <FiCpu size={11} color="#6366f1" />
+                          ECH-2026-DEV
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Database Metric Counters — Including Experience */}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 1fr",
+                        gap: "0.4rem",
+                        marginBottom: "0.75rem",
+                      }}
+                    >
+                      {/* Projects Box */}
+                      <div className="id-badge-stat-box">
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "1.15rem",
+                            fontWeight: 800,
+                            color: "#38bdf8",
+                            lineHeight: 1.15,
+                          }}
+                        >
+                          {projectsCount > 0 ? projectsCount : "4"}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.65rem",
+                            color: "var(--text-muted)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Projects
+                        </span>
+                      </div>
+
+                      {/* Experience Box — Added as requested */}
+                      <div className="id-badge-stat-box">
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "1.15rem",
+                            fontWeight: 800,
+                            color: "#10b981",
+                            lineHeight: 1.15,
+                          }}
+                        >
+                          {experienceCount > 0 ? `${experienceCount} Yr` : "1 Yr"}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.65rem",
+                            color: "var(--text-muted)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Experience
+                        </span>
+                      </div>
+
+                      {/* Skills Box */}
+                      <div className="id-badge-stat-box">
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "1.15rem",
+                            fontWeight: 800,
+                            color: "#f59e0b",
+                            lineHeight: 1.15,
+                          }}
+                        >
+                          {skillsCount > 0 ? skillsCount : "24+"}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.65rem",
+                            color: "var(--text-muted)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Skills
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Department & Experience Tag Information */}
+                    <div
+                      style={{
+                        padding: "0.45rem 0.65rem",
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border)",
+                        marginBottom: "0.65rem",
+                        fontSize: "0.7rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <span>DEPT: MERN Stack</span>
+                      <span
+                        style={{
+                          color: "#10b981",
+                          fontWeight: 700,
+                          background: "rgba(16, 185, 129, 0.12)",
+                          padding: "0.1rem 0.45rem",
+                          borderRadius: "var(--radius-full)",
+                          fontSize: "0.66rem",
+                        }}
                       >
-                        {t}
+                        EXP: Hands-on / 1 Yr
                       </span>
-                    ))}
+                    </div>
+
+                    {/* Security Laser Barcode & Auth String */}
+                    <div
+                      style={{
+                        marginTop: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "0.65rem",
+                        paddingTop: "0.5rem",
+                        borderTop: "1px solid var(--divider)",
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div className="id-badge-barcode" />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.62rem",
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--text-muted)",
+                          letterSpacing: "0.08em",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        AUTH-2026-MERN
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="scroll-indicator"
-          style={{ cursor: "pointer" }}
+        {/* Scroll Explorer Arrow */}
+        <div
           onClick={() => scrollToSection("about")}
-          role="button"
-          aria-label="Scroll to About section"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && scrollToSection("about")}
+          style={{
+            position: "absolute",
+            bottom: "0.75rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.3rem",
+            color: "var(--text-muted)",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
         >
-          <span
-            style={{
-              fontSize: "0.75rem",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Scroll Down
-          </span>
-          <FiArrowDown size={18} color="var(--accent)" />
-        </motion.div>
+          <span>Explore</span>
+          <FiArrowDown size={14} color="#0d9488" />
+        </div>
       </div>
     </section>
   );

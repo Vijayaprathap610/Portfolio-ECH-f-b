@@ -2,11 +2,7 @@ const Project = require('../models/Project');
 const path = require('path');
 const fs = require('fs');
 
-
 // Normalize a raw payload before handing it to Mongoose.
-// Converts comma-separated strings into arrays.
-// Converts an empty-string `completedAt` to null (defensive; not currently
-// exposed in the admin form, but guards against future use / direct API calls).
 const normalizePayload = (data) => {
     const payload = { ...data };
 
@@ -16,7 +12,7 @@ const normalizePayload = (data) => {
     if (typeof payload.features === 'string') {
         payload.features = payload.features.split(',').map((f) => f.trim()).filter(Boolean);
     }
-    if (payload.completedAt === '') {
+    if (payload.completedAt === '' || payload.completedAt === 'null' || payload.completedAt === undefined) {
         payload.completedAt = null;
     }
 
@@ -30,11 +26,10 @@ const getAllProjects = async ({
     search,
     sort = '-createdAt',
     featured,
-    isVisible, // ← was previously dropped; public requests pass `true` here to hide hidden projects
+    isVisible,
 }) => {
     const query = {};
 
-    // CRITICAL: must be applied first so public visitors never see hidden projects.
     if (isVisible !== undefined) {
         query.isVisible = isVisible === 'true' || isVisible === true;
     }
@@ -53,7 +48,7 @@ const getAllProjects = async ({
 
     const skip = (Number(page) - 1) * Number(limit);
     const [projects, total] = await Promise.all([
-        Project.find(query).sort(sort).skip(skip).limit(Number(limit)),
+        Project.find(query).sort(sort).skip(skip).limit(Number(limit)).lean(),
         Project.countDocuments(query),
     ]);
 
@@ -61,7 +56,7 @@ const getAllProjects = async ({
 };
 
 const getProjectById = async (id) => {
-    const project = await Project.findById(id);
+    const project = await Project.findById(id).lean();
     if (!project) throw { statusCode: 404, message: 'Project not found.' };
     return project;
 };
@@ -85,7 +80,7 @@ const updateProject = async (id, data, files = []) => {
 
     const payload = normalizePayload(data);
 
-    // Append newly uploaded images to the existing set (does not replace them)
+    // Append newly uploaded images to the existing set
     if (files.length > 0) {
         const newImages = files.map((file, idx) => ({
             url: `/uploads/projects/${file.filename}`,
@@ -94,7 +89,6 @@ const updateProject = async (id, data, files = []) => {
         }));
         payload.images = [...(project.images || []), ...newImages];
 
-        // If the project had no images before, mark the first new upload as main
         if (project.images.length === 0 && newImages.length > 0) {
             payload.images[0].isMain = true;
         }
@@ -114,7 +108,11 @@ const deleteProject = async (id) => {
         project.images.forEach((img) => {
             const filePath = path.join(__dirname, '..', img.url);
             if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch {
+                    /* ignored */
+                }
             }
         });
     }
@@ -131,11 +129,16 @@ const deleteProjectImage = async (projectId, imageUrl) => {
     if (imageIndex === -1) throw { statusCode: 404, message: 'Image not found in project.' };
 
     const filePath = path.join(__dirname, '..', imageUrl);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (fs.existsSync(filePath)) {
+        try {
+            fs.unlinkSync(filePath);
+        } catch {
+            /* ignored */
+        }
+    }
 
     project.images.splice(imageIndex, 1);
 
-    // If the main image was removed, promote the first remaining image
     if (project.images.length > 0 && !project.images.some((img) => img.isMain)) {
         project.images[0].isMain = true;
     }

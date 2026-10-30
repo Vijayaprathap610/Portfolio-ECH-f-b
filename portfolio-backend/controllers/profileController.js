@@ -8,6 +8,13 @@ const getProfile = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+const getPortfolioBundle = async (req, res, next) => {
+    try {
+        const bundle = await profileService.getPortfolioBundle();
+        return sendSuccess(res, 200, 'Portfolio bundle retrieved successfully.', bundle);
+    } catch (err) { next(err); }
+};
+
 const updateProfile = async (req, res, next) => {
     try {
         const profile = await profileService.updateProfile(req.body);
@@ -32,4 +39,4 @@ const updateResume = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-module.exports = { getProfile, updateProfile, updateProfilePhoto, updateResume };
+module.exports = { getProfile, getPortfolioBundle, updateProfile, updateProfilePhoto, updateResume };

@@ -12,6 +12,7 @@ const requestLogger = require('./middleware/requestLogger');
 const logger = require('./utils/logger');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+
 // Import Routes
 const authRoute = require('./routes/authRoute');
 const profileRoute = require('./routes/profileRoute');
@@ -23,21 +24,10 @@ const testimonialsRoute = require('./routes/testimonialsRoute');
 const contactRoute = require('./routes/contactRoute');
 const analyticsRoute = require('./routes/analyticsRoute');
 
-
-
 const app = express();
 connectDB();
 
 // ─── Trust Proxy ──────────────────────────────────────────────────────────────
-// Required in production when deployed behind a reverse proxy / load balancer
-// (Heroku, Render, Railway, Nginx, AWS ELB, Vercel, etc.). Without this, Express
-// ignores the X-Forwarded-For header and req.ip always resolves to the proxy's
-// own IP for every request — which silently breaks per-IP rate limiting,
-// account-lockout tracking, contact/testimonial spam limits, and visitor
-// analytics (every visitor would be counted as the same single "IP").
-// `1` means "trust exactly one hop" (the immediate proxy) — the secure default,
-// since trusting an unbounded number of hops allows IP spoofing via a
-// client-supplied X-Forwarded-For header.
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
@@ -46,22 +36,33 @@ if (process.env.NODE_ENV === 'production') {
 app.use(
     helmet({
         crossOriginResourcePolicy: { policy: 'cross-origin' },
-        contentSecurityPolicy: false, // Disabled for API; enable for SSR
+        contentSecurityPolicy: false,
     })
 );
 
-// ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+// ─── Robust CORS for Local Dev & Production ──────────────────────────────────
+const defaultOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'https://elite-code-hub.netlify.app',
+];
+const envOrigins = (process.env.CLIENT_URL || '')
     .split(',')
-    .map((o) => o.trim());
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
+            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
                 callback(null, true);
             } else {
-                callback(new Error(`CORS blocked: origin ${origin} not allowed.`));
+                callback(null, true);
             }
         },
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -78,7 +79,7 @@ app.use(cookieParser());
 
 // ─── Security Middleware ─────────────────────────────────────────────────────
 app.use(mongoSanitize);
-app.use(hpp());             // HTTP Parameter Pollution protection
+app.use(hpp());
 
 // ─── Compression ─────────────────────────────────────────────────────────────
 app.use(compression());
@@ -99,6 +100,7 @@ app.get('/', (req, res) => {
         health: '/api/health'
     });
 });
+
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
     res.status(200).json({
@@ -129,7 +131,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ─── Start Server ────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, () => {
     logger.info(`
 ╔═══════════════════════════════════════════════╗

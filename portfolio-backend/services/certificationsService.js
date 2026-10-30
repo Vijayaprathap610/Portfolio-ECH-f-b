@@ -2,13 +2,6 @@ const Certification = require('../models/Certification');
 const path = require('path');
 const fs = require('fs');
 
-
-// Normalize a raw payload before handing it to Mongoose.
-// Converts a comma-separated `skills` string into an array.
-// Converts an empty-string `expiryDate` to null (Mongoose throws a
-// CastError on an empty string for a Date field, which happens whenever
-// "doesExpire" is unchecked but expiryDate was previously populated, or
-// the date input is submitted blank).
 const normalizePayload = (data) => {
     const payload = { ...data };
 
@@ -19,18 +12,17 @@ const normalizePayload = (data) => {
             .filter(Boolean);
     }
 
-    if (payload.expiryDate === '' || payload.expiryDate === undefined) {
+    if (payload.expiryDate === '' || payload.expiryDate === undefined || payload.expiryDate === 'null') {
         payload.expiryDate = null;
     }
 
-    // If the cert doesn't expire, force expiryDate to null regardless of stray input
     const doesExpire = payload.doesExpire === true || payload.doesExpire === 'true';
     if (!doesExpire) {
         payload.expiryDate = null;
     }
 
     if (payload.issueDate === '') {
-        delete payload.issueDate; // let required-field validation catch it
+        delete payload.issueDate;
     }
 
     return payload;
@@ -38,11 +30,11 @@ const normalizePayload = (data) => {
 
 const getAllCertifications = async (onlyVisible = false) => {
     const query = onlyVisible ? { isVisible: true } : {};
-    return Certification.find(query).sort({ isFeatured: -1, order: 1, issueDate: -1 });
+    return Certification.find(query).sort({ isFeatured: -1, order: 1, issueDate: -1 }).lean();
 };
 
 const getCertificationById = async (id) => {
-    const cert = await Certification.findById(id);
+    const cert = await Certification.findById(id).lean();
     if (!cert) throw { statusCode: 404, message: 'Certification not found.' };
     return cert;
 };
@@ -62,10 +54,15 @@ const updateCertification = async (id, data, file = null) => {
     const payload = normalizePayload(data);
 
     if (file) {
-        // Delete old image from disk before replacing it
         if (cert.image) {
             const oldPath = path.join(__dirname, '..', cert.image);
-            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            if (fs.existsSync(oldPath)) {
+                try {
+                    fs.unlinkSync(oldPath);
+                } catch {
+                    /* ignored */
+                }
+            }
         }
         payload.image = `/uploads/certifications/${file.filename}`;
     }
@@ -81,7 +78,13 @@ const deleteCertification = async (id) => {
 
     if (cert.image) {
         const filePath = path.join(__dirname, '..', cert.image);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        if (fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+            } catch {
+                /* ignored */
+            }
+        }
     }
     return cert;
 };

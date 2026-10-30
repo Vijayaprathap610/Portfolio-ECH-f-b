@@ -9,6 +9,8 @@ import {
   FiFolderPlus,
   FiMail,
   FiMessageSquare,
+  FiExternalLink,
+  FiArrowUpRight,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -17,11 +19,17 @@ import { getDashboardStats, getVisitorStats } from "../../api/analyticsApi";
 
 const StatCard = ({ label, value, icon: Icon, color, link, badge }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 15 }}
     animate={{ opacity: 1, y: 0 }}
-    whileHover={{ y: -3 }}
+    whileHover={{ y: -2 }}
     className="card-custom"
-    style={{ padding: "1.5rem", cursor: link ? "pointer" : "default" }}
+    style={{
+      padding: "1.25rem 1.5rem",
+      background: "var(--bg-card)",
+      border: "1px solid var(--border)",
+      borderRadius: "var(--radius-lg)",
+      height: "100%",
+    }}
   >
     <Link to={link || "#"} style={{ textDecoration: "none" }}>
       <div
@@ -32,60 +40,78 @@ const StatCard = ({ label, value, icon: Icon, color, link, badge }) => (
         }}
       >
         <div>
-          <p
+          <span
             style={{
               color: "var(--text-muted)",
-              fontSize: "0.8rem",
-              margin: "0 0 0.5rem",
+              fontSize: "0.75rem",
+              fontWeight: 700,
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
+              letterSpacing: "0.06em",
+              display: "block",
+              marginBottom: "0.4rem",
             }}
           >
             {label}
-          </p>
-          <p
+          </span>
+          <span
             style={{
               color: "var(--text-primary)",
               fontWeight: 900,
-              fontSize: "2rem",
-              margin: 0,
-              lineHeight: 1,
+              fontSize: "1.85rem",
+              lineHeight: 1.1,
+              display: "block",
             }}
           >
-            {value ?? "—"}
-          </p>
-          {badge !== undefined && badge > 0 && (
+            {value ?? "0"}
+          </span>
+
+          {badge !== undefined && badge > 0 ? (
             <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "0.25rem",
                 marginTop: "0.5rem",
-                padding: "0.2rem 0.6rem",
+                padding: "0.2rem 0.55rem",
                 borderRadius: "var(--radius-full)",
-                background: "rgba(245,158,11,0.12)",
+                background: "rgba(245, 158, 11, 0.12)",
                 color: "var(--warning)",
-                fontSize: "0.72rem",
+                fontSize: "0.725rem",
                 fontWeight: 700,
               }}
             >
               <FiAlertCircle size={11} /> {badge} pending
             </span>
+          ) : (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                marginTop: "0.5rem",
+                color: "var(--text-muted)",
+                fontSize: "0.725rem",
+              }}
+            >
+              Synced with DB
+            </span>
           )}
         </div>
+
         <div
           style={{
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             borderRadius: "var(--radius-md)",
-            background: `${color}18`,
+            background: `${color}15`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            color: color,
             flexShrink: 0,
           }}
         >
-          <Icon size={22} color={color} />
+          <Icon size={20} />
         </div>
       </div>
     </Link>
@@ -116,21 +142,21 @@ function Dashboard() {
     load();
   }, []);
 
-  if (loading) return <LoadingSpinner message="Loading dashboard..." />;
+  if (loading) return <LoadingSpinner message="Loading administration dashboard..." />;
 
   const statCards = [
     {
-      label: "Total Projects",
+      label: "Projects",
       value: stats?.totalProjects,
       icon: FiFolderPlus,
-      color: "var(--accent)",
+      color: "#8b1a2b",
       link: "/admin/projects",
     },
     {
-      label: "Total Skills",
+      label: "Skills",
       value: stats?.totalSkills,
       icon: FiCode,
-      color: "#10b981",
+      color: "#8b1a2b",
       link: "/admin/skills",
     },
     {
@@ -145,7 +171,7 @@ function Dashboard() {
       label: "Messages",
       value: stats?.totalMessages,
       icon: FiMail,
-      color: "#3b82f6",
+      color: "#2c6b8a",
       link: "/admin/messages",
       badge: stats?.unreadMessages,
     },
@@ -169,99 +195,140 @@ function Dashboard() {
   const visitorData = visitors?.stats || [];
 
   return (
-    <div>
+    <div style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* Page Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1
-          style={{
-            color: "var(--text-primary)",
-            fontWeight: 900,
-            fontSize: "1.75rem",
-            margin: "0 0 0.25rem",
-          }}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem",
+          marginBottom: "2rem",
+          paddingBottom: "1.25rem",
+          borderBottom: "1px solid var(--divider)",
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              color: "var(--text-primary)",
+              fontWeight: 900,
+              fontSize: "1.85rem",
+              margin: "0 0 0.35rem",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Welcome, <span className="gradient-text">{admin?.name || "Admin"}</span>
+          </h1>
+          <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.9rem" }}>
+            Operational telemetry, database content counters, and quick management links.
+          </p>
+        </div>
+
+        <Link
+          to="/"
+          target="_blank"
+          className="btn-outline-accent"
+          style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
         >
-          Welcome back,{" "}
-          <span style={{ color: "var(--accent)" }}>{admin?.name}</span> 👋
-        </h1>
-        <p style={{ color: "var(--text-muted)", margin: 0 }}>
-          Here's what's happening with your portfolio today.
-        </p>
+          View Public Site <FiExternalLink size={13} />
+        </Link>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Counter Grid */}
       <div className="row g-3 mb-4">
-        {statCards.map((card, i) => (
-          <div key={card.label} className="col-6 col-md-4 col-xl-2">
-            <motion.div transition={{ delay: i * 0.05 }}>
-              <StatCard {...card} />
-            </motion.div>
+        {statCards.map((card) => (
+          <div key={card.label} className="col-12 col-sm-6 col-md-4 col-xl-2">
+            <StatCard {...card} />
           </div>
         ))}
       </div>
 
-      {/* Visitor Chart + Quick Actions */}
-      <div className="row g-4">
-        {/* Visitor Sparkline */}
+      {/* Analytics & Quick Actions Section */}
+      <div className="row g-4 mb-4">
+        {/* Visitor Activity Chart */}
         <div className="col-12 col-lg-7">
-          <div className="card-custom" style={{ padding: "1.5rem" }}>
+          <div
+            className="card-custom"
+            style={{
+              padding: "1.75rem",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-lg)",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "1.25rem",
+                marginBottom: "1.5rem",
               }}
             >
-              <h5
-                style={{
-                  color: "var(--text-primary)",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Visitors (Last 14 Days)
-              </h5>
+              <div>
+                <h3
+                  style={{
+                    color: "var(--text-primary)",
+                    fontWeight: 700,
+                    fontSize: "1.1rem",
+                    margin: "0 0 0.2rem",
+                  }}
+                >
+                  Visitor Volume (Last 14 Days)
+                </h3>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                  Unique sessions registered across portfolio routes
+                </span>
+              </div>
               <span
                 style={{
-                  color: "var(--accent)",
-                  fontWeight: 800,
-                  fontSize: "1.2rem",
+                  color: "var(--accent-light)",
+                  fontWeight: 900,
+                  fontSize: "1.5rem",
                 }}
               >
                 {totalVisitors.toLocaleString()}
               </span>
             </div>
+
             {visitorData.length > 0 ? (
               <div
                 style={{
                   display: "flex",
                   alignItems: "flex-end",
-                  gap: "4px",
-                  height: 80,
+                  gap: "6px",
+                  height: 110,
+                  marginTop: "auto",
+                  paddingTop: "1rem",
                 }}
               >
                 {visitorData.map((d, i) => {
                   const max = Math.max(...visitorData.map((v) => v.count), 1);
-                  const h = Math.max(4, (d.count / max) * 80);
+                  const h = Math.max(8, (d.count / max) * 100);
                   return (
                     <div
                       key={i}
-                      title={`${d.date}: ${d.count} visitors`}
+                      title={`${d.date}: ${d.count} visits`}
                       style={{
                         flex: 1,
-                        height: h,
-                        background:
-                          "linear-gradient(to top, var(--accent), var(--accent-light))",
-                        borderRadius: "3px 3px 0 0",
-                        opacity: 0.8,
-                        transition: "opacity 0.2s ease",
-                        cursor: "default",
+                        height: `${h}%`,
+                        background: "var(--accent-gradient)",
+                        borderRadius: "4px 4px 0 0",
+                        opacity: 0.85,
+                        transition: "all var(--transition-fast)",
+                        cursor: "pointer",
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.opacity = 1;
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.transform = "scaleY(1.05)";
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.opacity = 0.8;
+                        e.currentTarget.style.opacity = "0.85";
+                        e.currentTarget.style.transform = "none";
                       }}
                     />
                   );
@@ -270,59 +337,73 @@ function Dashboard() {
             ) : (
               <div
                 style={{
-                  height: 80,
+                  height: 110,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: "var(--text-muted)",
                   fontSize: "0.875rem",
+                  background: "var(--bg-surface)",
+                  borderRadius: "var(--radius-md)",
                 }}
               >
-                No visitor data yet.
+                No visitor telemetry recorded in this period.
               </div>
             )}
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Management Shortcuts */}
         <div className="col-12 col-lg-5">
-          <div className="card-custom" style={{ padding: "1.5rem" }}>
-            <h5
+          <div
+            className="card-custom"
+            style={{
+              padding: "1.75rem",
+              background: "var(--bg-card)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-lg)",
+              height: "100%",
+            }}
+          >
+            <h3
               style={{
                 color: "var(--text-primary)",
                 fontWeight: 700,
+                fontSize: "1.1rem",
                 marginBottom: "1.25rem",
               }}
             >
-              Quick Actions
-            </h5>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.625rem",
-              }}
-            >
+              Content Management Quick Tasks
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
               {[
                 {
-                  label: "Add New Project",
+                  label: "Manage Portfolio Projects",
                   to: "/admin/projects",
                   icon: FiFolderPlus,
+                  color: "#8b1a2b",
                 },
-                { label: "Add New Skill", to: "/admin/skills", icon: FiCode },
                 {
-                  label: "Review Testimonials",
+                  label: "Configure Technical Skills",
+                  to: "/admin/skills",
+                  icon: FiCode,
+                  color: "#8b1a2b",
+                },
+                {
+                  label: "Review Endorsements",
                   to: "/admin/testimonials",
                   icon: FiMessageSquare,
+                  color: "#f59e0b",
                   badge: stats?.pendingTestimonials,
                 },
                 {
-                  label: "View Messages",
+                  label: "Review Inbound Messages",
                   to: "/admin/messages",
                   icon: FiMail,
+                  color: "#2c6b8a",
                   badge: stats?.unreadMessages,
                 },
-              ].map(({ label, to, icon: Icon, badge }) => (
+              ].map(({ label, to, icon: Icon, color, badge }) => (
                 <Link
                   key={label}
                   to={to}
@@ -330,50 +411,52 @@ function Dashboard() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "0.75rem 1rem",
+                    padding: "0.85rem 1rem",
                     borderRadius: "var(--radius-md)",
-                    background: "var(--bg-primary)",
+                    background: "var(--bg-surface)",
                     border: "1px solid var(--border)",
                     textDecoration: "none",
                     color: "var(--text-primary)",
-                    transition: "all 0.2s ease",
+                    transition: "all var(--transition-fast)",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(var(--accent-rgb),0.3)";
-                    e.currentTarget.style.background =
-                      "rgba(var(--accent-rgb),0.05)";
+                    e.currentTarget.style.borderColor = "var(--accent)";
+                    e.currentTarget.style.transform = "translateX(3px)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = "var(--border)";
-                    e.currentTarget.style.background = "var(--bg-primary)";
+                    e.currentTarget.style.transform = "none";
                   }}
                 >
                   <span
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.625rem",
-                      fontWeight: 500,
+                      gap: "0.75rem",
+                      fontWeight: 600,
                       fontSize: "0.875rem",
                     }}
                   >
-                    <Icon size={16} color="var(--accent)" /> {label}
+                    <Icon size={16} color={color} /> {label}
                   </span>
-                  {badge > 0 && (
-                    <span
-                      style={{
-                        background: "var(--warning)",
-                        color: "white",
-                        fontSize: "0.7rem",
-                        fontWeight: 800,
-                        padding: "0.15rem 0.5rem",
-                        borderRadius: "var(--radius-full)",
-                      }}
-                    >
-                      {badge}
-                    </span>
-                  )}
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {badge > 0 && (
+                      <span
+                        style={{
+                          background: "var(--warning)",
+                          color: "#ffffff",
+                          fontSize: "0.7rem",
+                          fontWeight: 800,
+                          padding: "0.15rem 0.5rem",
+                          borderRadius: "var(--radius-full)",
+                        }}
+                      >
+                        {badge} new
+                      </span>
+                    )}
+                    <FiArrowUpRight size={15} color="var(--text-muted)" />
+                  </div>
                 </Link>
               ))}
             </div>
@@ -381,35 +464,35 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Status Checks */}
+      {/* System Integrity & Readiness Card */}
       <div
         className="card-custom"
-        style={{ padding: "1.5rem", marginTop: "1.5rem" }}
+        style={{
+          padding: "1.5rem",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-lg)",
+        }}
       >
-        <h5
+        <h3
           style={{
             color: "var(--text-primary)",
             fontWeight: 700,
+            fontSize: "1rem",
             marginBottom: "1rem",
           }}
         >
-          Portfolio Health
-        </h5>
+          Portfolio System Health
+        </h3>
         <div className="row g-3">
           {[
-            { label: "Projects added", ok: stats?.totalProjects > 0 },
-            { label: "Skills configured", ok: stats?.totalSkills > 0 },
-            { label: "Experience added", ok: stats?.totalExperience > 0 },
+            { label: "Projects Online", ok: stats?.totalProjects > 0 },
+            { label: "Skills Seeded", ok: stats?.totalSkills > 0 },
+            { label: "Experience Registered", ok: stats?.totalExperience > 0 },
+            { label: "Certificates Configured", ok: stats?.totalCertifications > 0 },
+            { label: "Endorsements Active", ok: stats?.totalTestimonials > 0 },
             {
-              label: "Certifications added",
-              ok: stats?.totalCertifications > 0,
-            },
-            {
-              label: "Testimonials approved",
-              ok: stats?.totalTestimonials > 0,
-            },
-            {
-              label: "Messages awaiting reply",
+              label: "Zero Unread Inquiries",
               ok: stats?.unreadMessages === 0,
               warnIfFalse: true,
             },
@@ -420,16 +503,17 @@ function Dashboard() {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.5rem",
-                  fontSize: "0.875rem",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
                   color: ok
                     ? "var(--success)"
                     : warnIfFalse
-                      ? "var(--warning)"
-                      : "var(--text-muted)",
+                    ? "var(--warning)"
+                    : "var(--text-muted)",
                 }}
               >
-                {ok ? <FiCheckCircle size={16} /> : <FiAlertCircle size={16} />}
-                {label}
+                {ok ? <FiCheckCircle size={15} /> : <FiAlertCircle size={15} />}
+                <span>{label}</span>
               </div>
             </div>
           ))}

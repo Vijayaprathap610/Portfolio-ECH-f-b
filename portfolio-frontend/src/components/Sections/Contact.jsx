@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { getErrorMessage } from "../../utils/helpers";
 import { toast } from "react-toastify";
 import {
@@ -7,10 +6,10 @@ import {
   FaGithub,
   FaLinkedin,
   FaMapMarkerAlt,
-  FaPaperPlane,
   FaPhone,
   FaInstagram,
 } from "react-icons/fa";
+import { FiSend, FiCheckCircle } from "react-icons/fi";
 import SectionHeader from "../common/SectionHeader";
 import { submitContact } from "../../api/contactApi";
 
@@ -18,30 +17,49 @@ const FORM_INITIAL = {
   name: "",
   email: "",
   phone: "",
-  subject: "",
+  subject: "[Employment Opportunity] Full Stack Engineering Inquiry",
   message: "",
 };
 
 const validate = (form) => {
   const e = {};
-  if (!form.name.trim()) e.name = "Name is required.";
-  if (!form.email.trim()) e.email = "Email is required.";
+  if (!form.name.trim()) e.name = "Full name is required.";
+  if (!form.email.trim()) e.email = "Email address is required.";
   else if (!/^\S+@\S+\.\S+$/.test(form.email))
-    e.email = "Please enter a valid email.";
+    e.email = "Please provide a valid email format.";
   if (form.phone && !/^[+\d\s\-()]*$/.test(form.phone))
     e.phone = "Invalid phone number format.";
-  if (!form.subject.trim()) e.subject = "Subject is required.";
-  if (!form.message.trim()) e.message = "Message is required.";
+  if (!form.subject.trim()) e.subject = "Subject line is required.";
+  if (!form.message.trim()) e.message = "Message text is required.";
   else if (form.message.trim().length < 10)
-    e.message = "Message must be at least 10 characters.";
+    e.message = "Message should be at least 10 characters long.";
   return e;
 };
 
 function Contact({ profile }) {
   const [form, setForm] = useState(FORM_INITIAL);
+  const [selectedPurpose, setSelectedPurpose] = useState("Employment Opportunity");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const handleSelectPurpose = (purpose) => {
+    setSelectedPurpose(purpose);
+    setForm((prev) => ({
+      ...prev,
+      subject: `[${purpose}] Full Stack Engineering Inquiry`,
+    }));
+  };
+
+  useEffect(() => {
+    const handlePurposeEvent = (e) => {
+      if (e.detail) {
+        handleSelectPurpose(e.detail);
+      }
+    };
+    window.addEventListener("select-contact-purpose", handlePurposeEvent);
+    return () => window.removeEventListener("select-contact-purpose", handlePurposeEvent);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,7 +79,7 @@ function Contact({ profile }) {
       await submitContact(form);
       setSubmitted(true);
       setForm(FORM_INITIAL);
-      toast.success("Message sent successfully! I'll get back to you soon.");
+      toast.success("Message dispatched! I will get back to you shortly.");
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -69,50 +87,21 @@ function Contact({ profile }) {
     }
   };
 
-  const fieldStyle = (field) => ({
-    width: "100%",
-    padding: "0.85rem 1.1rem",
-    background: "var(--bg-input)",
-    border: `1.5px solid ${errors[field] ? "var(--danger)" : "var(--border)"}`,
-    borderRadius: "var(--radius-md)",
-    color: "var(--text-primary)",
-    fontFamily: "var(--font-primary)",
-    fontSize: "0.9rem",
-    outline: "none",
-    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-  });
-
-  const focusHandlers = (field) => ({
-    onFocus: (e) => {
-      e.target.style.borderColor = "var(--accent)";
-      e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)";
-    },
-    onBlur: (e) => {
-      e.target.style.borderColor = errors[field]
-        ? "var(--danger)"
-        : "var(--border)";
-      e.target.style.boxShadow = "none";
-    },
-  });
-
   const socials = [
     {
       icon: FaGithub,
       href: profile?.socialLinks?.github,
       label: "GitHub",
-      color: "#181717",
     },
     {
       icon: FaLinkedin,
       href: profile?.socialLinks?.linkedin,
       label: "LinkedIn",
-      color: "#0A66C2",
     },
     {
       icon: FaInstagram,
       href: profile?.socialLinks?.instagram,
       label: "Instagram",
-      color: "#1DA1F2",
     },
   ].filter((s) => s.href);
 
@@ -124,51 +113,50 @@ function Contact({ profile }) {
     >
       <div className="container-xl px-4">
         <SectionHeader
-          title="Get In"
-          highlight="Touch"
-          subtitle="Have a project in mind? Let's talk! I'm always open to new opportunities."
+          title="Start a"
+          highlight="Conversation"
+          subtitle="Available for fulltime engineering opportunities, contract projects, and architecture reviews."
         />
 
-        <div className="row g-5 align-items-start">
+        <div className="row g-4 align-items-stretch">
           {/* Info Side */}
-          <div className="col-12 col-lg-4">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+          <div className="col-12 col-lg-5">
+            <div
+              className="card-custom"
+              style={{
+                padding: "2rem",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-xl)",
+              }}
             >
               <h3
                 style={{
                   color: "var(--text-primary)",
                   fontWeight: 800,
-                  marginBottom: "1rem",
-                  fontSize: "1.5rem",
+                  fontSize: "1.4rem",
+                  marginBottom: "0.75rem",
                 }}
               >
-                Let's build something great together
+                Let's Build Something High Performance
               </h3>
               <p
                 style={{
-                  color: "var(--text-muted)",
-                  lineHeight: 1.8,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.75,
+                  fontSize: "0.95rem",
                   marginBottom: "2rem",
                 }}
               >
-                Whether you have a full project, a question, or just want to say
-                hello — I'd love to hear from you. I typically respond within 24
-                hours.
+                Whether you have a technical question, architecture requirements, or a role to discuss,
+                feel free to reach out directly through the form or my social handles.
               </p>
 
-              {/* Contact Details */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  marginBottom: "2rem",
-                }}
-              >
+              {/* Direct channels */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
                 {[
                   {
                     icon: FaEnvelope,
@@ -185,16 +173,18 @@ function Contact({ profile }) {
                   {
                     icon: FaMapMarkerAlt,
                     label: "Location",
-                    value: profile?.location,
+                    value: profile?.location || "India",
                   },
                 ]
                   .filter((c) => c.value)
                   .map(({ icon: Icon, label, value, href }) => (
                     <div
                       key={label}
-                      className="card-custom"
                       style={{
-                        padding: "1rem 1.25rem",
+                        padding: "1rem",
+                        borderRadius: "var(--radius-md)",
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border)",
                         display: "flex",
                         alignItems: "center",
                         gap: "1rem",
@@ -202,30 +192,31 @@ function Contact({ profile }) {
                     >
                       <div
                         style={{
-                          width: 42,
-                          height: 42,
+                          width: 40,
+                          height: 40,
                           borderRadius: "var(--radius-md)",
-                          background: "rgba(var(--accent-rgb), 0.1)",
+                          background: "rgba(var(--accent-rgb), 0.12)",
+                          color: "var(--accent-light)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
                         }}
                       >
-                        <Icon size={16} color="var(--accent)" />
+                        <Icon size={16} />
                       </div>
-                      <div>
-                        <p
+                      <div style={{ overflow: "hidden" }}>
+                        <span
                           style={{
-                            color: "var(--text-muted)",
+                            display: "block",
                             fontSize: "0.75rem",
-                            margin: "0 0 0.15rem",
+                            color: "var(--text-muted)",
                             textTransform: "uppercase",
-                            letterSpacing: "0.05em",
+                            fontWeight: 700,
                           }}
                         >
                           {label}
-                        </p>
+                        </span>
                         {href ? (
                           <a
                             href={href}
@@ -233,326 +224,315 @@ function Contact({ profile }) {
                               color: "var(--text-primary)",
                               fontWeight: 600,
                               fontSize: "0.9rem",
+                              wordBreak: "break-all",
                             }}
                           >
                             {value}
                           </a>
                         ) : (
-                          <p
+                          <span
                             style={{
                               color: "var(--text-primary)",
                               fontWeight: 600,
-                              margin: 0,
                               fontSize: "0.9rem",
                             }}
                           >
                             {value}
-                          </p>
+                          </span>
                         )}
                       </div>
                     </div>
                   ))}
               </div>
 
-              {/* Social Links */}
+              {/* Social Channels */}
               {socials.length > 0 && (
-                <div>
-                  <p
+                <div style={{ marginTop: "auto" }}>
+                  <span
                     style={{
+                      display: "block",
+                      fontSize: "0.75rem",
                       color: "var(--text-muted)",
-                      fontSize: "0.8rem",
+                      fontWeight: 700,
                       textTransform: "uppercase",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.05em",
                       marginBottom: "0.75rem",
                     }}
                   >
-                    Find me on
-                  </p>
+                    Social & Code Profiles
+                  </span>
                   <div style={{ display: "flex", gap: "0.75rem" }}>
                     {socials.map(({ icon: Icon, href, label }) => (
-                      <motion.a
+                      <a
                         key={label}
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={label}
-                        whileHover={{ y: -3, scale: 1.1 }}
-                        className="card-custom"
                         style={{
-                          width: 46,
-                          height: 46,
-                          padding: 0,
+                          width: 44,
+                          height: 44,
+                          borderRadius: "var(--radius-md)",
+                          background: "var(--bg-surface)",
+                          border: "1px solid var(--border)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "var(--text-muted)",
+                          color: "var(--text-secondary)",
+                          transition: "all var(--transition-fast)",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.color = "var(--accent)";
-                          e.currentTarget.style.borderColor =
-                            "rgba(var(--accent-rgb),0.3)";
+                          e.currentTarget.style.color = "var(--accent-light)";
+                          e.currentTarget.style.borderColor = "var(--accent)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = "var(--text-muted)";
+                          e.currentTarget.style.color = "var(--text-secondary)";
                           e.currentTarget.style.borderColor = "var(--border)";
+                          e.currentTarget.style.transform = "none";
                         }}
                       >
-                        <Icon size={18} />
-                      </motion.a>
+                        <Icon size={17} />
+                      </a>
                     ))}
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
           </div>
 
           {/* Form Side */}
-          <div className="col-12 col-lg-8">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.15 }}
+          <div className="col-12 col-lg-7">
+            <div
               className="card-custom"
-              style={{ padding: "2rem" }}
+              style={{
+                padding: "2rem",
+                height: "100%",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-xl)",
+              }}
             >
               {submitted ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  style={{ textAlign: "center", padding: "3rem 1rem" }}
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "3rem 1rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
                 >
-                  <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>
-                    ✅
-                  </div>
-                  <h4
+                  <div
                     style={{
-                      color: "var(--text-primary)",
-                      fontWeight: 800,
-                      marginBottom: "0.75rem",
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      background: "rgba(16,185,129,0.12)",
+                      color: "var(--success)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: "1.25rem",
                     }}
                   >
-                    Message Sent!
-                  </h4>
-                  <p style={{ color: "var(--text-muted)" }}>
-                    Thank you for reaching out. I'll get back to you within 24
-                    hours.
+                    <FiCheckCircle size={32} />
+                  </div>
+                  <h3 style={{ color: "var(--text-primary)", fontWeight: 800, marginBottom: "0.5rem" }}>
+                    Message Dispatched Successfully
+                  </h3>
+                  <p style={{ color: "var(--text-muted)", maxWidth: 400, marginBottom: "1.75rem" }}>
+                    Thanks for reaching out! Your note has been registered in the database, and I will reply to your provided email address shortly.
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
-                    className="btn-outline-accent"
-                    style={{ marginTop: "1.5rem" }}
+                    className="btn-accent"
                   >
-                    Send Another Message
+                    Send Another Note
                   </button>
-                </motion.div>
+                </div>
               ) : (
                 <form onSubmit={handleSubmit} noValidate>
                   <h4
                     style={{
                       color: "var(--text-primary)",
-                      fontWeight: 700,
-                      marginBottom: "1.5rem",
-                      fontSize: "1.15rem",
+                      fontWeight: 800,
+                      fontSize: "1.2rem",
+                      marginBottom: "1.25rem",
                     }}
                   >
-                    Send a Message
+                    Send a Direct Message
                   </h4>
+
+                  {/* Purpose of Contact Selection */}
+                  <div style={{ marginBottom: "1.35rem" }}>
+                    <label
+                      className="form-label-custom"
+                      style={{ marginBottom: "0.55rem" }}
+                    >
+                      Select Contact Purpose:
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "0.45rem",
+                      }}
+                    >
+                      {[
+                        "Employment Opportunity",
+                        "Freelance Project",
+                        "Collaboration",
+                        "General Inquiry",
+                      ].map((purpose) => {
+                        const isSelected = selectedPurpose === purpose;
+                        return (
+                          <button
+                            key={purpose}
+                            type="button"
+                            className={`purpose-chip ${
+                              isSelected ? "active" : ""
+                            }`}
+                            onClick={() => handleSelectPurpose(purpose)}
+                          >
+                            {isSelected && (
+                              <FiCheckCircle
+                                size={13}
+                                color="var(--accent-light)"
+                              />
+                            )}
+                            {purpose}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="row g-3">
                     <div className="col-12 col-sm-6">
                       <label className="form-label-custom" htmlFor="c-name">
-                        Full Name *
+                        Your Full Name *
                       </label>
                       <input
                         id="c-name"
                         name="name"
                         value={form.name}
                         onChange={handleChange}
-                        placeholder="Vijay K"
-                        style={fieldStyle("name")}
-                        {...focusHandlers("name")}
+                        placeholder="Alex Morgan"
+                        className="form-control-custom"
                       />
                       {errors.name && (
-                        <p
-                          style={{
-                            color: "var(--danger)",
-                            fontSize: "0.78rem",
-                            margin: "0.25rem 0 0",
-                          }}
-                        >
+                        <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
                           {errors.name}
                         </p>
                       )}
                     </div>
+
                     <div className="col-12 col-sm-6">
                       <label className="form-label-custom" htmlFor="c-email">
-                        Email Address *
+                        Your Email Address *
                       </label>
                       <input
                         id="c-email"
-                        name="email"
                         type="email"
+                        name="email"
                         value={form.email}
                         onChange={handleChange}
-                        placeholder="vijay@example.com"
-                        style={fieldStyle("email")}
-                        {...focusHandlers("email")}
+                        placeholder="alex@example.com"
+                        className="form-control-custom"
                       />
                       {errors.email && (
-                        <p
-                          style={{
-                            color: "var(--danger)",
-                            fontSize: "0.78rem",
-                            margin: "0.25rem 0 0",
-                          }}
-                        >
+                        <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
                           {errors.email}
                         </p>
                       )}
                     </div>
+
                     <div className="col-12 col-sm-6">
                       <label className="form-label-custom" htmlFor="c-phone">
-                        Phone Number
+                        Phone (Optional)
                       </label>
                       <input
                         id="c-phone"
-                        name="phone"
                         type="tel"
+                        name="phone"
                         value={form.phone}
                         onChange={handleChange}
-                        placeholder="+91 98765 43210"
-                        style={fieldStyle("phone")}
-                        {...focusHandlers("phone")}
+                        placeholder="+1 (555) 000-0000"
+                        className="form-control-custom"
                       />
                       {errors.phone && (
-                        <p
-                          style={{
-                            color: "var(--danger)",
-                            fontSize: "0.78rem",
-                            margin: "0.25rem 0 0",
-                          }}
-                        >
+                        <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
                           {errors.phone}
                         </p>
                       )}
                     </div>
+
                     <div className="col-12 col-sm-6">
                       <label className="form-label-custom" htmlFor="c-subject">
-                        Subject *
+                        Subject Line *
                       </label>
                       <input
                         id="c-subject"
                         name="subject"
                         value={form.subject}
                         onChange={handleChange}
-                        placeholder="Project Inquiry / Job Opportunity"
-                        style={fieldStyle("subject")}
-                        {...focusHandlers("subject")}
+                        placeholder="Opportunity / Collaboration"
+                        className="form-control-custom"
                       />
                       {errors.subject && (
-                        <p
-                          style={{
-                            color: "var(--danger)",
-                            fontSize: "0.78rem",
-                            margin: "0.25rem 0 0",
-                          }}
-                        >
+                        <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
                           {errors.subject}
                         </p>
                       )}
                     </div>
+
                     <div className="col-12">
                       <label className="form-label-custom" htmlFor="c-message">
-                        Message *
+                        Message Content *
                       </label>
                       <textarea
                         id="c-message"
                         name="message"
                         value={form.message}
                         onChange={handleChange}
-                        rows={6}
-                        placeholder="Tell me about your project, timeline, budget, or anything you'd like to discuss..."
-                        style={{ ...fieldStyle("message"), resize: "vertical" }}
-                        {...focusHandlers("message")}
+                        rows={5}
+                        placeholder="Write your project context, timeline, or position details..."
+                        className="form-control-custom"
+                        style={{ resize: "vertical" }}
                       />
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginTop: "0.25rem",
-                        }}
-                      >
-                        {errors.message ? (
-                          <p
-                            style={{
-                              color: "var(--danger)",
-                              fontSize: "0.78rem",
-                              margin: 0,
-                            }}
-                          >
-                            {errors.message}
-                          </p>
-                        ) : (
-                          <span />
-                        )}
-                        <span
-                          style={{
-                            color: "var(--text-muted)",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          {form.message.length}/5000
-                        </span>
-                      </div>
+                      {errors.message && (
+                        <p style={{ color: "var(--danger)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
+                          {errors.message}
+                        </p>
+                      )}
                     </div>
+
                     <div className="col-12">
-                      <motion.button
+                      <button
                         type="submit"
                         disabled={loading}
-                        whileHover={{ scale: loading ? 1 : 1.02 }}
-                        whileTap={{ scale: loading ? 1 : 0.97 }}
                         className="btn-accent"
                         style={{
                           width: "100%",
                           justifyContent: "center",
-                          fontSize: "1rem",
-                          padding: "0.875rem",
-                          opacity: loading ? 0.7 : 1,
+                          padding: "0.9rem",
+                          fontSize: "0.95rem",
                         }}
                       >
                         {loading ? (
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.5rem",
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: 16,
-                                height: 16,
-                                border: "2px solid rgba(255,255,255,0.3)",
-                                borderTopColor: "white",
-                                borderRadius: "50%",
-                                display: "inline-block",
-                                animation: "spin 0.8s linear infinite",
-                              }}
-                            />
-                            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                            Sending...
-                          </span>
+                          "Dispatched Message..."
                         ) : (
                           <>
-                            <FaPaperPlane size={15} /> Send Message
+                            <FiSend size={15} /> Send Message Directly
                           </>
                         )}
-                      </motion.button>
+                      </button>
                     </div>
                   </div>
                 </form>
               )}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

@@ -3,9 +3,9 @@ const Skill = require('../models/Skill');
 const getAllSkills = async (filters = {}) => {
     const query = {};
     if (filters.category) query.category = filters.category;
-    if (filters.isVisible !== undefined) query.isVisible = filters.isVisible;
+    if (filters.isVisible !== undefined) query.isVisible = filters.isVisible === 'true' || filters.isVisible === true;
 
-    const skills = await Skill.find(query).sort({ category: 1, order: 1, name: 1 });
+    const skills = await Skill.find(query).sort({ category: 1, order: 1, name: 1 }).lean();
 
     // Group by category
     const grouped = skills.reduce((acc, skill) => {
@@ -18,7 +18,7 @@ const getAllSkills = async (filters = {}) => {
 };
 
 const getSkillById = async (id) => {
-    const skill = await Skill.findById(id);
+    const skill = await Skill.findById(id).lean();
     if (!skill) throw { statusCode: 404, message: 'Skill not found.' };
     return skill;
 };

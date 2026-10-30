@@ -11,22 +11,38 @@ import Testimonials from "../components/Sections/Testimonials";
 import Contact from "../components/Sections/Contact";
 import Footer from "../components/common/Footer";
 import { getProfile } from "../api/profileApi";
+import { getSkills } from "../api/skillsApi";
+import { getProjects } from "../api/projectsApi";
+import { getExperience } from "../api/experienceApi";
 import { recordVisit } from "../api/analyticsApi";
 
 function Home() {
-  const { data } = useFetch(getProfile);
-  const profile = data?.data || null;
+  const { data: profileData, loading, error } = useFetch(getProfile);
+  const { data: skillsData } = useFetch(getSkills);
+  const { data: projectsData } = useFetch(getProjects);
+  const { data: experienceData } = useFetch(getExperience);
 
-  // Record page visit
+  const profile = profileData?.data || null;
+  const skillsCount = skillsData?.data?.skills?.length || 0;
+  const projectsCount = projectsData?.meta?.total ?? projectsData?.data?.length ?? 0;
+  const experienceCount = experienceData?.data?.length || 1;
+
+  // Record visitor analytics silently on mount
   useEffect(() => {
     recordVisit("home").catch(() => {});
   }, []);
+
   return (
     <>
       <Navbar />
       <main id="main-content" tabIndex={-1}>
-        <Hero profile={profile} />
-        <About profile={profile} />
+        <Hero
+          profile={profile}
+          projectsCount={projectsCount}
+          skillsCount={skillsCount}
+          experienceCount={experienceCount}
+        />
+        <About profile={profile} loading={loading} error={error} />
         <Skills />
         <Projects />
         <Experience />

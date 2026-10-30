@@ -3,7 +3,7 @@ const Admin = require('../models/Admin');
 const logger = require('../utils/logger');
 const { sendError } = require('../utils/response');
 
-//Protect routes - verify jwt Bearer token
+// Protect routes - verify jwt Bearer token
 const protect = async (req, res, next) => {
     try {
         let token;
@@ -39,8 +39,9 @@ const protect = async (req, res, next) => {
             return res.status(401).json(sendError(401, 'Admin account not found.'));
         }
 
-        // Attach admin to request
+        // Attach admin to request (both req.admin and req.user to ensure full compatibility)
         req.admin = admin;
+        req.user = admin;
         next();
     } catch (err) {
         logger.error(`Auth middleware error: ${err.message}`);
@@ -51,7 +52,8 @@ const protect = async (req, res, next) => {
 // Role-based access control
 const authorize = (...roles) => {
     return (req, res, next) => {
-        if (!req.admin || !roles.includes(req.admin.role)) {
+        const currentRole = req.admin?.role || req.user?.role;
+        if (!currentRole || !roles.includes(currentRole)) {
             return res.status(403).json(
                 sendError(403, `Access denied. Required role: ${roles.join(' or ')}.`)
             );
@@ -60,7 +62,7 @@ const authorize = (...roles) => {
     };
 };
 
-//Optional auth — attach admin if token provided, continue either way
+// Optional auth — attach admin/user if token provided, continue either way
 const optionalAuth = async (req, res, next) => {
     try {
         let token;
@@ -74,14 +76,22 @@ const optionalAuth = async (req, res, next) => {
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                req.admin = await Admin.findById(decoded.id).select('-secretKeyHash');
+                const foundAdmin = await Admin.findById(decoded.id).select('-secretKeyHash');
+                req.admin = foundAdmin;
+                req.user = foundAdmin;
             } catch {
                 // Token invalid — continue as guest
                 req.admin = null;
+                req.user = null;
             }
+        } else {
+            req.admin = null;
+            req.user = null;
         }
         next();
     } catch (err) {
+        req.admin = null;
+        req.user = null;
         next();
     }
 };

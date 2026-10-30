@@ -11,16 +11,24 @@ import SectionHeader from "../common/SectionHeader";
 import SkeletonCard from "../common/SkeletonCard";
 import { getExperience } from "../../api/experienceApi";
 
-const ExperienceCard = ({ exp, index, isLeft }) => (
+const ExperienceCard = ({ exp, index }) => (
   <motion.div
-    initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
-    whileInView={{ opacity: 1, x: 0 }}
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
-    transition={{ duration: 0.6, delay: index * 0.1 }}
-    style={{ marginBottom: "2rem", position: "relative" }}
+    transition={{ duration: 0.45, delay: index * 0.08 }}
+    style={{ marginBottom: "1.25rem", position: "relative" }}
   >
-    <div className="card-custom" style={{ padding: "1.5rem" }}>
-      {/* Top Row */}
+    <div
+      className="card-custom"
+      style={{
+        padding: "1.25rem 1.4rem",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius-lg)",
+      }}
+    >
+      {/* Header Row */}
       <div
         style={{
           display: "flex",
@@ -28,99 +36,87 @@ const ExperienceCard = ({ exp, index, isLeft }) => (
           alignItems: "flex-start",
           flexWrap: "wrap",
           gap: "0.75rem",
-          marginBottom: "1rem",
+          marginBottom: "0.85rem",
         }}
       >
         <div>
-          <h5
+          <h4
             style={{
               color: "var(--text-primary)",
               fontWeight: 800,
-              margin: "0 0 0.25rem",
+              margin: "0 0 0.2rem",
               fontSize: "1.05rem",
             }}
           >
             {exp.position}
-          </h5>
+          </h4>
           <p
             style={{
-              color: "var(--accent)",
+              color: "var(--accent-light)",
               fontWeight: 700,
-              margin: "0 0 0.25rem",
-              fontSize: "0.95rem",
+              margin: "0 0 0.3rem",
+              fontSize: "0.885rem",
             }}
           >
             {exp.company}
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
-            {exp.location && (
-              <span
-                style={{
-                  color: "var(--text-muted)",
-                  fontSize: "0.8rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.3rem",
-                }}
-              >
-                <FaMapMarkerAlt size={11} /> {exp.location}
-              </span>
-            )}
-          </div>
+          {exp.location && (
+            <span
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "0.825rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+              }}
+            >
+              <FaMapMarkerAlt size={11} /> {exp.location}
+            </span>
+          )}
         </div>
+
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <span
             className="badge-custom"
             style={{
               fontSize: "0.75rem",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
-              marginBottom: "0.4rem",
+              marginBottom: "0.35rem",
             }}
           >
-            <FaCalendarAlt size={11} />
+            <FaCalendarAlt size={10} />
             {formatMonthYear(exp.startDate)} —{" "}
             {exp.isCurrent ? "Present" : formatMonthYear(exp.endDate)}
           </span>
-          <span
-            style={{
-              display: "inline-block",
-              padding: "0.2rem 0.6rem",
-              borderRadius: "var(--radius-full)",
-              background: "rgba(var(--accent-rgb),0.1)",
-              color: "var(--accent)",
-              fontSize: "0.72rem",
-              fontWeight: 600,
-            }}
-          >
-            {exp.type}
-          </span>
+          {exp.type && (
+            <div style={{ marginTop: "0.25rem" }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "0.2rem 0.65rem",
+                  borderRadius: "var(--radius-full)",
+                  background: "rgba(var(--accent-rgb), 0.12)",
+                  color: "var(--accent-light)",
+                  fontSize: "0.725rem",
+                  fontWeight: 700,
+                }}
+              >
+                {exp.type}
+              </span>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Duration Badge */}
-      {exp.duration && (
-        <div style={{ marginBottom: "0.75rem" }}>
-          <span
-            style={{
-              fontSize: "0.8rem",
-              color: "var(--text-muted)",
-              fontStyle: "italic",
-            }}
-          >
-            Duration: {exp.duration}
-          </span>
-        </div>
-      )}
 
       {/* Description */}
       {exp.description && (
         <p
           style={{
             color: "var(--text-secondary)",
-            fontSize: "0.9rem",
-            lineHeight: 1.7,
+            fontSize: "0.925rem",
+            lineHeight: 1.75,
             marginBottom: "1rem",
           }}
         >
@@ -128,38 +124,40 @@ const ExperienceCard = ({ exp, index, isLeft }) => (
         </p>
       )}
 
-      {/* Responsibilities */}
+      {/* Responsibilities list */}
       {exp.responsibilities?.length > 0 && (
-        <div style={{ marginBottom: "1rem" }}>
-          <p
+        <div style={{ marginBottom: "1.25rem" }}>
+          <h5
             style={{
-              color: "var(--text-secondary)",
+              color: "var(--text-primary)",
               fontWeight: 700,
               fontSize: "0.85rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
               marginBottom: "0.6rem",
             }}
           >
-            Key Responsibilities:
-          </p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            Key Highlights & Deliverables
+          </h5>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.45rem" }}>
             {exp.responsibilities.map((r, i) => (
               <li
                 key={i}
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: "0.5rem",
-                  marginBottom: "0.4rem",
-                  color: "var(--text-muted)",
+                  gap: "0.55rem",
+                  color: "var(--text-secondary)",
                   fontSize: "0.875rem",
+                  lineHeight: 1.5,
                 }}
               >
                 <FaCheckCircle
                   size={13}
-                  color="var(--success)"
+                  color="var(--accent)"
                   style={{ flexShrink: 0, marginTop: 3 }}
                 />
-                {r}
+                <span>{r}</span>
               </li>
             ))}
           </ul>
@@ -168,18 +166,18 @@ const ExperienceCard = ({ exp, index, isLeft }) => (
 
       {/* Technologies */}
       {exp.technologies?.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", paddingTop: "0.5rem", borderTop: "1px solid var(--divider)" }}>
           {exp.technologies.map((tech) => (
             <span
               key={tech}
               style={{
-                padding: "0.2rem 0.6rem",
+                padding: "0.25rem 0.65rem",
                 borderRadius: "var(--radius-full)",
-                background: "var(--bg-secondary)",
+                background: "var(--bg-surface)",
                 color: "var(--text-muted)",
-                fontSize: "0.72rem",
+                fontSize: "0.75rem",
+                fontWeight: 600,
                 border: "1px solid var(--border)",
-                fontFamily: "var(--font-mono)",
               }}
             >
               {tech}
@@ -194,6 +192,7 @@ const ExperienceCard = ({ exp, index, isLeft }) => (
 function Experience() {
   const { data, loading, error } = useFetch(getExperience);
   const experiences = data?.data || [];
+
   return (
     <section
       id="experience"
@@ -202,16 +201,16 @@ function Experience() {
     >
       <div className="container-xl px-4">
         <SectionHeader
-          title="Work"
+          title="Career"
           highlight="Experience"
-          subtitle="My professional journey and internship experience."
+          subtitle="Real-world development roles, engineering internships, and commercial project delivery."
         />
 
         {loading && (
-          <div className="row g-4">
+          <div className="row g-4 justify-content-center">
             {[1, 2].map((i) => (
-              <div key={i} className="col-12">
-                <SkeletonCard height={60} lines={5} />
+              <div key={i} className="col-12 col-lg-10">
+                <SkeletonCard height={80} lines={5} />
               </div>
             ))}
           </div>
@@ -220,35 +219,50 @@ function Experience() {
         {error && (
           <div
             className="text-center"
-            style={{ color: "var(--danger)", padding: "2rem" }}
+            style={{
+              color: "var(--danger)",
+              padding: "2rem",
+              background: "var(--bg-card)",
+              borderRadius: "var(--radius-lg)",
+            }}
           >
-            <p>Failed to load experience. Please try again later.</p>
+            <p style={{ margin: 0 }}>Failed to load experience records.</p>
           </div>
         )}
 
         {!loading && !error && experiences.length === 0 && (
-          <div className="text-center" style={{ padding: "4rem 0" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💼</div>
-            <p style={{ color: "var(--text-muted)" }}>
-              No experience entries yet.
+          <div
+            className="text-center"
+            style={{
+              padding: "4rem 2rem",
+              background: "var(--bg-card)",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--border)",
+              maxWidth: 600,
+              margin: "0 auto",
+            }}
+          >
+            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>💼</div>
+            <h4 style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+              Entry-Level & Passion Projects
+            </h4>
+            <p style={{ color: "var(--text-muted)", margin: 0 }}>
+              Currently open to new fulltime software engineering and developer opportunities.
             </p>
           </div>
         )}
 
         {!loading && !error && experiences.length > 0 && (
-          <div
-            style={{ position: "relative", maxWidth: 800, margin: "0 auto" }}
-          >
-            {/* Vertical Timeline Line */}
+          <div style={{ position: "relative", maxWidth: 840, margin: "0 auto" }}>
+            {/* Timeline Bar */}
             <div
               style={{
                 position: "absolute",
-                left: 24,
-                top: 0,
-                bottom: 0,
+                left: 20,
+                top: 15,
+                bottom: 20,
                 width: 2,
-                background:
-                  "linear-gradient(to bottom, var(--accent), transparent)",
+                background: "linear-gradient(to bottom, var(--accent), rgba(var(--accent-rgb), 0.05))",
                 zIndex: 0,
               }}
             />
@@ -256,17 +270,13 @@ function Experience() {
             {experiences.map((exp, i) => (
               <div
                 key={exp._id}
-                style={{ paddingLeft: "60px", position: "relative" }}
+                style={{ paddingLeft: "52px", position: "relative" }}
               >
-                {/* Timeline Dot */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                {/* Marker icon */}
+                <div
                   style={{
                     position: "absolute",
-                    left: 12,
+                    left: 9,
                     top: 24,
                     width: 24,
                     height: 24,
@@ -277,44 +287,16 @@ function Experience() {
                     alignItems: "center",
                     justifyContent: "center",
                     zIndex: 1,
-                    boxShadow: "var(--shadow-glow)",
+                    boxShadow: "0 0 12px rgba(var(--accent-rgb), 0.4)",
                   }}
                 >
                   <FaBriefcase size={10} color="white" />
-                </motion.div>
-                <ExperienceCard exp={exp} index={i} isLeft={i % 2 === 0} />
+                </div>
+                <ExperienceCard exp={exp} index={i} />
               </div>
             ))}
           </div>
         )}
-
-        {/* Fresher Note */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          style={{ maxWidth: 600, margin: "2rem auto 0", textAlign: "center" }}
-        >
-          <div
-            className="card-custom"
-            style={{
-              padding: "1.25rem",
-              borderColor: "rgba(var(--accent-rgb),0.2)",
-            }}
-          >
-            <p
-              style={{
-                color: "var(--text-muted)",
-                fontSize: "0.875rem",
-                margin: 0,
-              }}
-            >
-              💡 As a fresher, I combine internship experience with strong
-              self-directed learning and hands-on personal projects to build
-              production-ready applications.
-            </p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

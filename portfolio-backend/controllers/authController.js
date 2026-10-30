@@ -25,15 +25,21 @@ const adminLogin = async (req, res, next) => {
 
 /**
  * GET /api/auth/admin/me
- * Get current logged-in admin info
+ * Get current logged-in admin / user info
  */
 const getMe = async (req, res, next) => {
     try {
+        const current = req.admin || req.user;
+        const userPayload = {
+            id: current._id,
+            name: current.name,
+            role: current.role,
+            lastLogin: current.lastLogin,
+        };
         return sendSuccess(res, 200, 'Admin profile retrieved.', {
-            id: req.admin._id,
-            name: req.admin.name,
-            role: req.admin.role,
-            lastLogin: req.admin.lastLogin,
+            ...userPayload,
+            admin: userPayload,
+            user: userPayload,
         });
     } catch (err) {
         next(err);
@@ -45,7 +51,8 @@ const getMe = async (req, res, next) => {
  * Logout (client-side token invalidation)
  */
 const adminLogout = async (req, res) => {
-    logger.info(`Admin logged out: ${req.admin?.name}`);
+    const current = req.admin || req.user;
+    logger.info(`Admin logged out: ${current?.name}`);
     return sendSuccess(res, 200, 'Logged out successfully.');
 };
 
